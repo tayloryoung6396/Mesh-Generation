@@ -1704,3 +1704,10 @@ angle_values = (1.424895, -0.002425, 3.103351)
 camera_add(location_values, angle_values, 'PERSP')
 
 lamp_add(object_number, object_name)
+
+
+
+
+
+
+y = abs(mod(2x, 1) - 0.5)
