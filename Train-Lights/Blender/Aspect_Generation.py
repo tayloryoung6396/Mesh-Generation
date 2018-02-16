@@ -25,9 +25,9 @@ def configuration():
             'light' : ([[1, 0, 0, 'on'],
                          [1, 0, 0, 'on'],
                          [0, 1, 0, 'off'],
-                         [0, 1, 0, 'on'],
-                         [0, 1, 0, 'off'],
-                         [1, 0, 0, 'blank']]),
+                         [0, 1, 0, 'blank'],
+                         [1, 1, 1, 'off'],
+                         [1, 0, 0, 'off']]),
             'light_can_depth' : 0.069,
             'spacing_between_cans' : 0.015,
             'light_can_radius' : 0.1,
@@ -83,13 +83,11 @@ elif style == 'circle':
 
 elif style == 'cirtri':
     number_total = config_dir['lights']['number_total']
-    if number_total > 3:
-        number_total = 3
+    number_total = 3
 
 elif style == 'square':
     number_total = config_dir['lights']['number_total']
-    if number_total > 5:
-        number_total = 5
+    number_total = 5
 
 else:
     print('Style Unknown')
@@ -694,7 +692,8 @@ def move_can(style,
              x_lights,
              light_depth,
              light_can_wall_thickness,
-             obj):
+             obj,
+             light_status):
     # Orientation flips y and z location values
     # Independent of can type
 
@@ -769,6 +768,9 @@ def move_can(style,
         else:
             print('Orientation Unknown')
 
+    if light_status == 'on':
+        add_signal_lamp(x_light, light_values, thickness, light_can_radius, spacing_between_cans, obj.location)
+
     return obj
 
 
@@ -806,6 +808,8 @@ def light_material(R, G, B):
     if mat is None:
         # create material and assign
         mat = bpy.data.materials.new('light_material_' + str(R) + '_' + str(G) + '_'+ str(B))
+    else:
+    	return
 
     mat.use_nodes = True
     node_tree = mat.node_tree
@@ -816,7 +820,7 @@ def light_material(R, G, B):
     mix_shader_2 = nodes.new(type='ShaderNodeMixShader')
     mix_shader_2.name = mix_shader_2.label = 'Mix Shader 2'
 
-    diffuse = nodes.new(type='ShaderNodeBsdfDiffuse')
+    diffuse = nodes['Diffuse BSDF']
     diffuse.name = diffuse.label = 'Diffuse'
     diffuse.inputs[0].default_value = (R, G, B, Alpha)
 
@@ -847,6 +851,8 @@ def light_material_ramp(R, G, B):
     if mat is None:
         # create material and assign
         mat = bpy.data.materials.new('light_material_ramp_' + str(R) + '_' + str(G) + '_'+ str(B))
+    else:
+    	return
 
     mat.use_nodes = True
     node_tree = mat.node_tree
@@ -949,44 +955,56 @@ def light_glass_material(light_values,
     mat = bpy.data.materials.get('light_glass_material_' + str(light_values[i][0]) + '_' + str(light_values[i][1]) + '_'+ str(light_values[i][2]))
 
     # TODO solve double creation of nodes
-    nodes_get = nodes.get
+    # nodes_get = nodes.get
 
     #if it doesnt exist, create it.
     if mat is None:
         # create material and assign
         mat = bpy.data.materials.new('light_glass_material_' + str(light_values[i][0]) + '_' + str(light_values[i][1]) + '_'+ str(light_values[i][2]))
-        nodes_get = nodes.new
+        # nodes_get = nodes.new
+    else:
+    	return
 
     mat.use_nodes = True
     node_tree = mat.node_tree
     nodes = node_tree.nodes
-
 
     output = nodes['Material Output']
 
     translucent = nodes.new(type='ShaderNodeBsdfTranslucent')
     translucent.name = translucent.label = 'Translucent'
 
+    #translucent = check_node(mat, 'ShaderNodeBsdfTranslucent', 'Translucent', translucent)
+
     mix_shader_1 = nodes.new(type='ShaderNodeMixShader')
     mix_shader_1.name = mix_shader_1.label = 'Mix Shader 1'
+
+    #mix_shader_1 = check_node(mat, 'ShaderNodeMixShader', 'Mix Shader 1', mix_shader_1)
 
     mix_shader_2 = nodes.new(type='ShaderNodeMixShader')
     mix_shader_2.name = mix_shader_2.label = 'Mix Shader 2'
 
+    #mix_shader_2 = check_node(mat, 'ShaderNodeMixShader', 'Mix Shader 2', mix_shader_2)
+
     fresnel = nodes.new(type='ShaderNodeFresnel')
     fresnel.name = fresnel.label = 'Fresnel'
 
+    #fresnel = check_node(mat, 'ShaderNodeFresnel', 'Fresnel', fresnel)
+
     glass = nodes.new(type='ShaderNodeBsdfGlass')
     glass.name = glass.label = 'Glass'
+    #glass = check_node(mat, 'ShaderNodeBsdfGlass', 'Glass', glass)
     glass.inputs[0].default_value = glass_value
     glass.distribution = 'BECKMANN'
 
-    diffuse = nodes.new(type='ShaderNodeBsdfDiffuse')
+    diffuse = nodes['Diffuse BSDF']
     diffuse.name = diffuse.label = 'Diffuse'
+    #diffuse = check_node(mat, 'ShaderNodeBsdfDiffuse', 'Diffuse', diffuse)
     diffuse.inputs[0].default_value = diffuse_value
 
     wave_tex = nodes.new(type='ShaderNodeTexWave')
     wave_tex.name = wave_tex.label = 'Wave Texture'
+    #wave_tex = check_node(mat, 'ShaderNodeTexWave', 'Wave Texture', wave_tex)
     wave_tex.inputs[1].default_value = wave_scale
     wave_tex.inputs[2].default_value = wave_distortion
     wave_tex.inputs[3].default_value = wave_detail
@@ -999,6 +1017,26 @@ def light_glass_material(light_values,
     node_tree.links.new(diffuse.outputs[0], mix_shader_2.inputs[2])
     node_tree.links.new(fresnel.outputs[0], mix_shader_2.inputs[0])
     node_tree.links.new(mix_shader_2.outputs[0], output.inputs['Surface'])
+
+def check_node(mat, check_node, node_label, node_name):
+
+    if mat.use_nodes:
+        node_tree = mat.node_tree
+        nodes = node_tree.nodes
+        node = nodes.get(check_node, None)
+
+        if node is None:
+            print("Not Found:", node)
+            node_name = nodes.new(type=check_node)
+            node_name.name = node_name.label = node_label
+
+        else:
+            if node.name == node_name:
+                node_name = node
+            else:
+                node_name = nodes.new(type=check_node)
+                node_name.name = node_name.label = node_label
+    return(node_name)
 
 
 def light_off_material(R, G, B):
@@ -1014,6 +1052,9 @@ def light_off_material(R, G, B):
         # create material and assign
         mat = bpy.data.materials.new('light_off_material_' + str(R) + '_' + str(G) + '_'+ str(B))
 
+    else:
+    	return
+
     mat.use_nodes = True
     node_tree = mat.node_tree
     nodes = node_tree.nodes
@@ -1023,7 +1064,7 @@ def light_off_material(R, G, B):
     mix_shader_2 = nodes.new(type='ShaderNodeMixShader')
     mix_shader_2.name = mix_shader_2.label = 'Mix Shader 2'
 
-    diffuse = nodes.new(type='ShaderNodeBsdfDiffuse')
+    diffuse = nodes['Diffuse BSDF']
     diffuse.name = diffuse.label = 'Diffuse'
     diffuse.inputs[0].default_value = (R * 0.2, G * 0.2, B * 0.2, Alpha)
 
@@ -1069,6 +1110,10 @@ def light_glass_off_material(light_values, i):
         # create material and assign
         mat = bpy.data.materials.new('light_glass_off_material_' + str(light_values[i][0]) + '_' + str(light_values[i][1]) + '_'+ str(light_values[i][2]))
 
+
+    else:
+    	return
+
     mat.use_nodes = True
     node_tree = mat.node_tree
     nodes = node_tree.nodes
@@ -1093,7 +1138,7 @@ def light_glass_off_material(light_values, i):
     glass.inputs[0].default_value = glass_value
     glass.distribution = 'BECKMANN'
 
-    diffuse = nodes.new(type='ShaderNodeBsdfDiffuse')
+    diffuse = nodes['Diffuse BSDF']
     diffuse.name = diffuse.label = 'Diffuse'
     diffuse.inputs[0].default_value = diffuse_value
 
@@ -1114,6 +1159,10 @@ def sign_material(sign_values):
     if mat is None:
         # create material and assign
         mat = bpy.data.materials.new('sign_material')
+
+
+    else:
+    	return
 
     roughness = 0.1
 
@@ -1161,6 +1210,9 @@ def PBR_Dielectric(roughness, reflection, diffuse_values, glossy_values, noise_v
         # create material and assign
         mat = bpy.data.materials.new(mat_name)
 
+    else:
+    	return
+
     mat.use_nodes = True
     node_tree = mat.node_tree
     nodes = node_tree.nodes
@@ -1200,7 +1252,7 @@ def PBR_Dielectric(roughness, reflection, diffuse_values, glossy_values, noise_v
     mix_1 = nodes.new(type='ShaderNodeMixShader')
     mix_1.name = mix_1.label = 'Mix 1'
 
-    diffuse = nodes.new(type='ShaderNodeBsdfDiffuse')
+    diffuse = nodes['Diffuse BSDF']
     diffuse.name = diffuse.label = 'Diffuse'
 
     power_1 = nodes.new(type='ShaderNodeMath')
@@ -1294,78 +1346,9 @@ def lamp_add(object_number,
     obj.rotation_euler.x = 0.785398 #0.698132
     obj.rotation_euler.z = 2.251475 #2.268928
 
-    # object_number = object_number + 1
-    # bpy.ops.object.lamp_add(type='AREA',
-    #                         location=(5, 5, 5)
-    #                         )
-    # bpy.ops.transform.rotate(value = 0, axis=(0.372297, -0.84189, -0.390662))
-    # bpy.context.object.data.size = 1
-    # #emission.inputs[0].default_value = (1, 1, 1)
-    # #emission.inputs[1].default_value = 1
-    # object_name.append(bpy.context.active_object.name)
-    # obj = objects[object_name[-1]]
-    # obj.name = 'Fill 1'
-    # mesh_name = bpy.data.objects['Fill 1'].data.name
-    # bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[1].default_value = 0
-    # bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[0].default_value = (1, 1, 1, 1)
-    # obj.rotation_euler.x = 0.9
-    # obj.rotation_euler.z = 1.57 + 0.785
+def add_signal_lamp(x_light, light_values, background_thickness, light_can_radius, spacing_between_cans, location):
 
-
-    # object_number = object_number + 1
-    # bpy.ops.object.lamp_add(type='AREA',
-    #                         location=(-5, 5, 5)
-    #                         )
-    # bpy.ops.transform.rotate(value = 0, axis=(0.207868, -0.752946, -0.62439))
-    # bpy.context.object.data.size = 1
-    # #emission.inputs[0].default_value = (1, 1, 1)
-    # #emission.inputs[1].default_value = 1
-    # object_name.append(bpy.context.active_object.name)
-    # obj = objects[object_name[-1]]
-    # obj.name = 'Fill 2'
-    # mesh_name = bpy.data.objects['Fill 2'].data.name
-    # bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[1].default_value = 0
-    # bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[0].default_value = (1, 1, 1, 1)
-    # obj.rotation_euler.x = 0.9
-    # obj.rotation_euler.z = -1.57 - 0.785
-
-    # object_number = object_number + 1
-    # bpy.ops.object.lamp_add(type='AREA',
-    #                         location=(-5, -5, 5)
-    #                         )
-    # bpy.ops.transform.rotate(value = 0, axis=(0.372297, -0.84189, -0.390662))
-    # bpy.context.object.data.size = 1
-    # #emission.inputs[0].default_value = (1, 1, 1)
-    # #emission.inputs[1].default_value = 1
-    # object_name.append(bpy.context.active_object.name)
-    # obj = objects[object_name[-1]]
-    # obj.name = 'Fill 3'
-    # mesh_name = bpy.data.objects['Fill 3'].data.name
-    # bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[1].default_value = 0
-    # bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[0].default_value = (1, 1, 1, 1)
-    # obj.rotation_euler.x = 0.9
-    # obj.rotation_euler.z = -0.785
-
-    # object_number = object_number + 1
-    # bpy.ops.object.lamp_add(type='AREA',
-    #                         location=(5, -5, 5)
-    #                         )
-    # bpy.ops.transform.rotate(value = 0, axis=(0.372297, -0.84189, -0.390662))
-    # bpy.context.object.data.size = 1
-    # #emission.inputs[0].default_value = (1, 1, 1)
-    # #emission.inputs[1].default_value = 1
-    # object_name.append(bpy.context.active_object.name)
-    # obj = objects[object_name[-1]]
-    # obj.name = 'Fill 4'
-    # mesh_name = bpy.data.objects['Fill 4'].data.name
-    # bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[1].default_value = 0
-    # bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[0].default_value = (1, 1, 1, 1)
-    # obj.rotation_euler.x = 0.9
-    # obj.rotation_euler.z = 1.57 - 0.785
-
-def add_signal_lamp(x_light, light_values, background_thickness, light_can_radius, spacing_between_cans):
-
-    location_values = (0, background_thickness * 1.01, x_light * (light_can_radius * 2 + spacing_between_cans))
+    location_values = (location[0], background_thickness * 1.01 + location[1], location[2])
     light_values = (0.426 * light_values[x_light][0], 0.426 * light_values[x_light][1], 0.426 * light_values[x_light][2], 1)
 
     bpy.ops.object.lamp_add(type='AREA',
@@ -1380,6 +1363,8 @@ def add_signal_lamp(x_light, light_values, background_thickness, light_can_radiu
     bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[0].default_value = light_values
     obj.rotation_euler.x = 1.57
     obj.rotation_euler.z = 0.139626
+
+    print('I made a lamp :)')
 
 #####################################################################################################################
 #####################################################################################################################
@@ -1509,7 +1494,8 @@ for x_light in range (0, (number_total)):
                              x_light,
                              light_can_depth,
                              light_can_wall_thickness,
-                             blank_obj)
+                             blank_obj,
+                             light_status)
         
         
 
@@ -1548,7 +1534,8 @@ for x_light in range (0, (number_total)):
                            x_light,
                            light_can_depth,
                            light_can_wall_thickness,
-                           can_obj)
+                           can_obj,
+                           light_status)
 
         light_obj = draw_light(object_number,
                                light_can_radius,
@@ -1567,7 +1554,6 @@ for x_light in range (0, (number_total)):
             
             elif Light_material_toggle == 'GLASS':
                 mat = bpy.data.materials['light_glass_material_' + str(light_values[x_light][0]) + '_' + str(light_values[x_light][1]) + '_' + str(light_values[x_light][2])]
-                add_signal_lamp(x_light, light_values, thickness, light_can_radius, spacing_between_cans)
 
             else:
                 mat = bpy.data.materials['light_material_' + str(light_values[x_light][0]) + '_' + str(light_values[x_light][1]) + '_' + str(light_values[x_light][2])]
@@ -1589,7 +1575,8 @@ for x_light in range (0, (number_total)):
                              x_light,
                              light_can_depth,
                              light_can_wall_thickness,
-                             light_obj)
+                             light_obj,
+                             light_status)
 
 
 
@@ -1679,6 +1666,14 @@ post_obj.data.materials.append(mat)
 for x in objects:
     bpy.data.objects[x.name].select = True
 bpy.ops.object.join()
+
+# s = 'Signal'
+# for x in objects.name:
+# 	if s.find('Signal') != -1:
+# 		x.select =True
+
+# TODO rotate signal lights
+
 bpy.context.object.location = (0, -0.075, -1.57269)
 bpy.context.object.rotation_euler.z = 0.139626 # 8 deg
 
