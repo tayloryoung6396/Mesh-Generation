@@ -1364,22 +1364,23 @@ camera_add(location_values, angle_values, 'PERSP')
 lamp_add(object_number, object_name)
 
 
-# objects = bpy.data.objects
+objects = bpy.data.objects
 
-# object_number = object_number + 1
+object_number = object_number + 1
 
-# x_equation = 'abs((2*u%1)-0.5) + u^2'
-# y_equation = 'abs((2*u%1)-0.5) + u^2'
-# z_equation = 'abs((2*u%1)-0.5) + u^2'
+x_equation = '0.05*v'
+y_equation = '0.01*(fabs(2*v%1)-0.5 + fabs(2*u%1)-0.5)'
+z_equation = '0.05*u'
 
-# bpy.ops.mesh.primitive_xyz_function_surface(x_eq=x_equation,   y_eq=y_equation,   z_eq=z_equation,
-#                                             range_u_min=0, range_u_max=1, range_u_step=10,
-#                                             range_v_min=0, range_v_max=1, range_v_step=10,
-#                                             wrap_u=False,  wrap_v=False)
+bpy.ops.mesh.primitive_xyz_function_surface(x_eq=x_equation,   y_eq=y_equation,   z_eq=z_equation,
+                                            range_u_min=0, range_u_max=5, range_u_step=100,
+                                            range_v_min=0, range_v_max=5, range_v_step=100,
+                                            wrap_u=False,  wrap_v=False)
 
-# object_name.append(bpy.context.active_object.name)
-# obj = objects[object_name[-1]]
+object_name.append(bpy.context.active_object.name)
+obj = objects[object_name[-1]]
 
-# obj.location=(0, 0, 0)
+obj.location=(0, 0, 0)
 
-y = abs((2*x%1)-0.5) + abs((2*z%1)-0.5)
+bpy.ops.object.modifier_add(type='SOLIDIFY')
+bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Solidify")
