@@ -36,9 +36,24 @@ def configuration():
             'light_spacing' : 0.015,
             'light_radius' : 0.1,
             'light_wall_thickness' : 0.01
+        },
+        'sign_parameters' : {
+            'height' : 0,
+            'radius' : 0,
+            'position' : {
+                'x' : 0,
+                'y' : -0.075,
+                'z' : -1.57269
+            },
+            'rotation' : {
+                'x' : 0,
+                'y' : 0,
+                'z' : -0.139626
+            }
         }
     }
     return config
+
 
 config_dir = configuration()
 
@@ -95,6 +110,17 @@ light_spacing =         config_dir['lights']['light_spacing']
 light_radius =          config_dir['lights']['light_radius']
 light_wall_thickness =  config_dir['lights']['light_wall_thickness']
 
+
+sign_height =   config_dir['sign_parameters']['height']
+post_radius =   config_dir['sign_parameters']['radius']
+
+sign_position = np.array(config_dir['sign_parameters']['position']['x'],
+                         config_dir['sign_parameters']['position']['y'],
+                         config_dir['sign_parameters']['position']['z'])
+
+sign_rotation = np.array(config_dir['sign_parameters']['rotation']['x'],
+                         config_dir['sign_parameters']['rotation']['y'],
+                         config_dir['sign_parameters']['rotation']['z'])
 
 # Set maximum number of lights for some designs
 if style == 'circle':
@@ -754,6 +780,12 @@ def draw_post(object_number):
     obj1.scale=(0.05, 0.05, 1.6)
     obj1.location=(0, -0.075, -1.6)
 
+    #obj1.scale=(post_radius, post_radius, ) 
+    # Sign height defined to the top to the background
+    # scale.z = sign height
+    # post position = -((post height / 2) - (background height - border size - light_radius))
+    # origin of aspect
+
     return(obj1)
 
 
@@ -1066,7 +1098,6 @@ def add_signal_lamp(x_light, light_values, background_thickness, light_radius, l
     bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[1].default_value = 0.5
     bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[0].default_value = light_values
     obj.rotation_euler.x = 1.57
-    #obj.rotation_euler.z = 0.139626
 
     print('I made a lamp :P')
 
@@ -1143,7 +1174,6 @@ noise = (10, 1, 0)
 
 PBR_Dielectric(roughness, reflection, diffuse, glossy, noise, 'PBR_Dielectric_post')
 
-#center = (number_total) * ((2 * light_radius) + light_spacing)
 
 objects = bpy.data.objects
 
@@ -1337,8 +1367,10 @@ bpy.context.object.name = "Aspect"
 obj = bpy.data.objects.get('Aspect')
 
 # Move sign to required position
-obj.location = (0, -0.075, -1.57269)
-obj.rotation_euler.z = 0.139626 # 8 deg
+obj.location = sign_position
+obj.rotation_euler.x = sign_rotation[0]
+obj.rotation_euler.y = sign_rotation[1]
+obj.rotation_euler.z = sign_rotation[2] # 8 deg
 
 # TODO add sign height configuration
 
@@ -1364,23 +1396,23 @@ camera_add(location_values, angle_values, 'PERSP')
 lamp_add(object_number, object_name)
 
 
-objects = bpy.data.objects
+# objects = bpy.data.objects
 
-object_number = object_number + 1
+# object_number = object_number + 1
 
-x_equation = '0.05*v'
-y_equation = '0.01*(fabs(2*v%1)-0.5 + fabs(2*u%1)-0.5)'
-z_equation = '0.05*u'
+# x_equation = '0.05*v'
+# y_equation = '0.01*(fabs(2*v%1)-0.5 + fabs(2*u%1)-0.5)'
+# z_equation = '0.05*u'
 
-bpy.ops.mesh.primitive_xyz_function_surface(x_eq=x_equation,   y_eq=y_equation,   z_eq=z_equation,
-                                            range_u_min=0, range_u_max=5, range_u_step=100,
-                                            range_v_min=0, range_v_max=5, range_v_step=100,
-                                            wrap_u=False,  wrap_v=False)
+# bpy.ops.mesh.primitive_xyz_function_surface(x_eq=x_equation,   y_eq=y_equation,   z_eq=z_equation,
+#                                             range_u_min=0, range_u_max=5, range_u_step=100,
+#                                             range_v_min=0, range_v_max=5, range_v_step=100,
+#                                             wrap_u=False,  wrap_v=False)
 
-object_name.append(bpy.context.active_object.name)
-obj = objects[object_name[-1]]
+# object_name.append(bpy.context.active_object.name)
+# obj = objects[object_name[-1]]
 
-obj.location=(0, 0, 0)
+# obj.location=(0, 0, 0)
 
-bpy.ops.object.modifier_add(type='SOLIDIFY')
-bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Solidify")
+# bpy.ops.object.modifier_add(type='SOLIDIFY')
+# bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Solidify")
