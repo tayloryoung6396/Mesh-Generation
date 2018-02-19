@@ -38,8 +38,8 @@ def configuration():
             'light_wall_thickness' : 0.01
         },
         'sign_parameters' : {
-            'height' : 0,
-            'radius' : 0,
+            'height' : 1.9,
+            'radius' : 0.05,
             'position' : {
                 'x' : 0,
                 'y' : -0.075,
@@ -114,13 +114,13 @@ light_wall_thickness =  config_dir['lights']['light_wall_thickness']
 sign_height =   config_dir['sign_parameters']['height']
 post_radius =   config_dir['sign_parameters']['radius']
 
-sign_position = np.array(config_dir['sign_parameters']['position']['x'],
+sign_position = np.array([config_dir['sign_parameters']['position']['x'],
                          config_dir['sign_parameters']['position']['y'],
-                         config_dir['sign_parameters']['position']['z'])
+                         config_dir['sign_parameters']['position']['z']])
 
-sign_rotation = np.array(config_dir['sign_parameters']['rotation']['x'],
+sign_rotation = np.array([config_dir['sign_parameters']['rotation']['x'],
                          config_dir['sign_parameters']['rotation']['y'],
-                         config_dir['sign_parameters']['rotation']['z'])
+                         config_dir['sign_parameters']['rotation']['z']])
 
 # Set maximum number of lights for some designs
 if style == 'circle':
@@ -767,7 +767,13 @@ def move_can(style,
     return obj
 
 
-def draw_post(object_number):
+def draw_post(object_number,
+              number_total,
+              light_radius,
+              border_size,
+              light_spacing):
+
+    background_height = (number_total * light_radius * 2) + ((number_total - 1) * light_spacing) + border_size * 2
 
     objects = bpy.data.objects
 
@@ -776,15 +782,15 @@ def draw_post(object_number):
 
     object_name.append(bpy.context.active_object.name)
     obj1 = objects[object_name[-1]]
-    
-    obj1.scale=(0.05, 0.05, 1.6)
-    obj1.location=(0, -0.075, -1.6)
 
-    #obj1.scale=(post_radius, post_radius, ) 
-    # Sign height defined to the top to the background
-    # scale.z = sign height
-    # post position = -((post height / 2) - (background height - border size - light_radius))
-    # origin of aspect
+    obj1.scale=(post_radius, 
+                post_radius,
+                sign_height)
+
+    obj1.location=(0, 
+                   -0.075,
+                   -((sign_height) - (background_height - border_size - light_radius))
+                   )
 
     return(obj1)
 
@@ -1341,7 +1347,11 @@ else:
     print('Background style Unknown')
 
 # Make post
-post_obj = draw_post(object_number)
+post_obj = draw_post(object_number,
+                     number_total,
+                     light_radius,
+                     border_size,
+                     light_spacing)
 
 mat = bpy.data.materials['PBR_Dielectric_post']
 post_obj.data.materials.append(mat)
@@ -1416,3 +1426,21 @@ lamp_add(object_number, object_name)
 
 # bpy.ops.object.modifier_add(type='SOLIDIFY')
 # bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Solidify")
+
+
+
+#####################################################################################################################
+#####################################################################################################################
+#                                                 INFORMATION SAVING                                                #
+#####################################################################################################################
+#####################################################################################################################
+
+Sign height
+Background height
+Background width
+Light radius
+Light colours
+Light spacing
+Number of lights
+Position x,y,z
+Rotation x,y,z
