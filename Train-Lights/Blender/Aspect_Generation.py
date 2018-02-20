@@ -1,6 +1,9 @@
 import bpy
 import numpy as np
 import math
+import os
+import random
+import yaml
 # from .configuration import configuration
 
 # config_dir = configuration()
@@ -122,6 +125,7 @@ sign_rotation = np.array([config_dir['sign_parameters']['rotation']['x'],
                          config_dir['sign_parameters']['rotation']['y'],
                          config_dir['sign_parameters']['rotation']['z']])
 
+
 # Set maximum number of lights for some designs
 if style == 'circle':
     number_total = config_dir['lights']['number_total']
@@ -141,6 +145,39 @@ else:
 
 object_number = 0    #Ranom Variable (Number of objects)
 object_name = [0]
+fno = 1
+
+
+
+
+output_data = {
+        'img_name' : '',
+        'background': {
+            'style' : style,
+            'orientation' : orientation,
+            'border_size' : border_size,
+            'thickness' : thickness,
+            'bevel_radius' : bevel_radius,
+        },
+        'lights' : {
+            'number_total' : number_total,
+            'light' : light_values.tolist(),
+            'light_depth' : light_can_depth,
+            'light_spacing' : light_spacing,
+            'light_radius' : light_radius,
+            'light_wall_thickness' : light_wall_thickness
+        },
+        'sign_parameters' : {
+            'height_total' : sign_height,
+            'radius' : post_radius,
+            'sign_height' : '',
+            'sign_width' : '',
+            'position' : sign_position.tolist(),
+            'rotation' : sign_rotation.tolist(),
+        }
+    }
+
+
 
 
 # Remove previous materials (for testing)
@@ -198,6 +235,9 @@ def draw_background_rec(light_radius,
     mat = bpy.data.materials['PBR_Dielectric']
     obj.data.materials.append(mat)
 
+    output_data['sign_parameters']['sign_height'] = height
+    output_data['sign_parameters']['sign_width'] = width
+
     return obj
 
 def draw_background_cir(light_radius, 
@@ -245,6 +285,9 @@ def draw_background_cir(light_radius,
     mat = bpy.data.materials['PBR_Dielectric']
     obj.data.materials.append(mat)
 
+    output_data['sign_parameters']['sign_height'] = height
+    output_data['sign_parameters']['sign_width'] = height
+
     return obj
 
 def draw_background_cirtri(light_radius, 
@@ -278,6 +321,9 @@ def draw_background_cirtri(light_radius,
     # Add material to sign
     mat = bpy.data.materials['PBR_Dielectric']
     obj.data.materials.append(mat)
+
+    output_data['sign_parameters']['sign_height'] = height
+    output_data['sign_parameters']['sign_width'] = height
 
     return obj
 
@@ -339,6 +385,9 @@ def draw_background_reccir(light_radius,
     mat = bpy.data.materials['PBR_Dielectric']
     obj1.data.materials.append(mat)
 
+
+    output_data['sign_parameters']['sign_height'] = height + height_circle
+    output_data['sign_parameters']['sign_width'] = width
 
     return obj1
 
@@ -427,6 +476,9 @@ def draw_background_recround(light_radius,
     mat = bpy.data.materials['PBR_Dielectric']
     obj.data.materials.append(mat)
 
+    output_data['sign_parameters']['sign_height'] = height + bevel_radius
+    output_data['sign_parameters']['sign_width'] = width
+
     return obj
 
 
@@ -460,6 +512,9 @@ def draw_background_squ(light_radius,
     # Add material to sign
     mat = bpy.data.materials['PBR_Dielectric']
     obj.data.materials.append(mat)
+
+    output_data['sign_parameters']['sign_height'] = width
+    output_data['sign_parameters']['sign_width'] = width
 
     return obj
 
@@ -696,7 +751,6 @@ def move_can(style,
 
     elif style == 'square':
 
-        # TODO some sort of X configuration
         vertical_offset = (math.sqrt((2 * light_radius + light_spacing) * (2 * light_radius + light_spacing) / 2))
         horizontal_offset = vertical_offset
 
@@ -729,8 +783,6 @@ def move_can(style,
         obj.location=(center_x, obj.location[1], center_y)
 
     elif style == 'cirtri':
-
-        # TODO some sort of X configuration
 
         center_x = 0 
         center_y = -(light_radius + light_spacing / 2) / (math.sqrt(3) / 2)
@@ -1043,6 +1095,21 @@ def PBR_Dielectric(roughness,
     node_tree.links.new(output.inputs[0], mix_1.outputs[0])
 
 
+def compositor():
+    # Link up our output layers to file output nodes
+    nodes = scene.node_tree.nodes
+    render_layers = scene.node_tree.nodes['Render Layers']
+    indexob_file = nodes.new('CompositorNodeOutputFile')
+    image_file = nodes.new('CompositorNodeOutputFile')
+    indexob_file.base_path = 'output'
+    indexob_file.file_slots[0].path = 'stencil'
+    image_file.base_path = 'output'
+    image_file.file_slots[0].path = 'image'
+
+    scene.node_tree.links.new(render_layers.outputs['IndexOB'], indexob_file.inputs['Image'])
+    scene.node_tree.links.new(render_layers.outputs['Image'], image_file.inputs['Image'])
+
+
 #####################################################################################################################
 #####################################################################################################################
 #                                                    CAMERA                                                         #
@@ -1105,13 +1172,24 @@ def add_signal_lamp(x_light, light_values, background_thickness, light_radius, l
     bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[0].default_value = light_values
     obj.rotation_euler.x = 1.57
 
-    print('I made a lamp :P')
+
+
+def load_img():
+
+    #bpy.context.space_data.show_background_images = True
+    #bpy.data.images.open(filepath="//Output/qldsignals-aspect-01.jpg", directory="/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output/", files=[{"name":"qldsignals-aspect-01.jpg", "name":"qldsignals-aspect-01.jpg"}], relative_path=True, show_multiview=False)
+
+    return
+
 
 #####################################################################################################################
 #####################################################################################################################
 #                                                   CODE HERE                                                       #
 #####################################################################################################################
 #####################################################################################################################
+
+# Change directories so we are where this file is
+script_dir = os.path.dirname(os.path.realpath(__file__))
 
 # Delete old objects 
 for object in bpy.data.objects:
@@ -1147,6 +1225,9 @@ scene.update()
 
 delete_materials()
 
+load_img()
+
+output_data['img_name'] = 'img_name'
 
 # For each light, create the material required
 for i in range(0, light_values.shape[0]):
@@ -1382,8 +1463,6 @@ obj.rotation_euler.x = sign_rotation[0]
 obj.rotation_euler.y = sign_rotation[1]
 obj.rotation_euler.z = sign_rotation[2] # 8 deg
 
-# TODO add sign height configuration
-
 
 #####################################################################################################################
 #####################################################################################################################
@@ -1406,41 +1485,129 @@ camera_add(location_values, angle_values, 'PERSP')
 lamp_add(object_number, object_name)
 
 
-# objects = bpy.data.objects
-
-# object_number = object_number + 1
-
-# x_equation = '0.05*v'
-# y_equation = '0.01*(fabs(2*v%1)-0.5 + fabs(2*u%1)-0.5)'
-# z_equation = '0.05*u'
-
-# bpy.ops.mesh.primitive_xyz_function_surface(x_eq=x_equation,   y_eq=y_equation,   z_eq=z_equation,
-#                                             range_u_min=0, range_u_max=5, range_u_step=100,
-#                                             range_v_min=0, range_v_max=5, range_v_step=100,
-#                                             wrap_u=False,  wrap_v=False)
-
-# object_name.append(bpy.context.active_object.name)
-# obj = objects[object_name[-1]]
-
-# obj.location=(0, 0, 0)
-
-# bpy.ops.object.modifier_add(type='SOLIDIFY')
-# bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Solidify")
-
-
-
 #####################################################################################################################
 #####################################################################################################################
 #                                                 INFORMATION SAVING                                                #
 #####################################################################################################################
 #####################################################################################################################
 
-Sign height
-Background height
-Background width
-Light radius
-Light colours
-Light spacing
-Number of lights
-Position x,y,z
-Rotation x,y,z
+
+
+
+with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-meta/',
+                       'meta{:04d}.yaml'.format(fno)),
+                       'w'
+                       ) as md:
+    md.write(yaml.dump(output_data, indent=4))
+
+
+
+def sun_position(timestamp, lat, long):
+
+    time = datetime.fromtimestamp(timestamp)
+
+    dayofyear = 
+
+    time.year
+    time.month
+    time.day
+    time.hour
+    time.minute
+    time.second
+    
+    #946688400
+
+
+
+
+def sunPosition(year, month, day, hour, min, sec, lat, long):
+
+    twopi = 2 * pi
+    deg2rad = pi / 180
+
+    # Get day of the year, e.g. Feb 1 = 32, Mar 1 = 61 on leap years
+    #month.days = c(0,31,28,31,30,31,30,31,31,30,31,30)
+
+    #day = day + cumsum(month.days)[month]
+    leapdays = year % 4 == 0 and (year % 400 == 0 or year % 100 != 0) and day >= 60 and !(month==2 and day==60)
+    day[leapdays] = day[leapdays] + 1
+
+    # Get Julian date - 2400000
+    hour = hour + min / 60 + sec / 3600 # hour plus fraction
+    delta = year - 1949
+    leap = trunc(delta / 4) # former leapyears
+    jd = 32916.5 + delta * 365 + leap + day + hour / 24
+
+    # The input to the Atronomer's almanach is the difference between
+    # the Julian date and JD 2451545.0 (noon, 1 January 2000)
+    time = jd - 51545
+
+    # Ecliptic coordinates
+
+    # Mean longitude
+    mnlong = 280.460 + 0.9856474 * time
+    mnlong = mnlong % 360
+    mnlong[mnlong < 0] = mnlong[mnlong < 0] + 360
+
+    # Mean anomaly
+    mnanom = 357.528 + .9856003 * time
+    mnanom = mnanom % 360
+    mnanom[mnanom < 0] = mnanom[mnanom < 0] + 360
+    mnanom = mnanom * deg2rad
+
+    # Ecliptic longitude and obliquity of ecliptic
+    eclong = mnlong + 1.915 * sin(mnanom) + 0.020 * sin(2 * mnanom)
+    eclong = eclong % 360
+    eclong[eclong < 0] = eclong[eclong < 0] + 360
+    oblqec = 23.439 - 0.0000004 * time
+    eclong = eclong * deg2rad
+    oblqec = oblqec * deg2rad
+
+    # Celestial coordinates
+    # Right ascension and declination
+    num = cos(oblqec) * sin(eclong)
+    den = cos(eclong)
+    ra = atan(num / den)
+    ra[den < 0] = ra[den < 0] + pi
+    ra[den >= 0 and num < 0] = ra[den >= 0 and num < 0] + twopi
+    dec = asin(sin(oblqec) * sin(eclong))
+
+    # Local coordinates
+    # Greenwich mean sidereal time
+    gmst = 6.697375 + .0657098242 * time + hour
+    gmst = gmst % 24
+    gmst[gmst < 0] = gmst[gmst < 0] + 24.
+
+    # Local mean sidereal time
+    lmst = gmst + long / 15.
+    lmst = lmst % 24.
+    lmst[lmst < 0] = lmst[lmst < 0] + 24.
+    lmst = lmst * 15. * deg2rad
+
+    # Hour angle
+    ha = lmst - ra
+    ha[ha < -pi] = ha[ha < -pi] + twopi
+    ha[ha > pi] = ha[ha > pi] - twopi
+
+    # Latitude to radians
+    lat = lat * deg2rad
+
+    # Azimuth and elevation
+    el = asin(sin(dec) * sin(lat) + cos(dec) * cos(lat) * cos(ha))
+    az = asin(-cos(dec) * sin(ha) / cos(el))
+
+    # For logic and names, see Spencer, J.W. 1989. Solar Energy. 42(4):353
+    cosAzPos = (0 <= sin(dec) - sin(el) * sin(lat))
+    sinAzNeg = (sin(az) < 0)
+    az[cosAzPos and sinAzNeg] = az[cosAzPos and sinAzNeg] + twopi
+    az[!cosAzPos] = pi - az[!cosAzPos]
+
+    el = el / deg2rad
+    az = az / deg2rad
+    lat = lat / deg2rad
+
+    return(list(elevation=el, azimuth=az))
+
+
+
+    https://pypi.python.org/pypi/sunpos/1.1

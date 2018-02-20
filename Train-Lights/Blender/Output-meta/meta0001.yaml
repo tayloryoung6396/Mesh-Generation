@@ -1,0 +1,22 @@
+background: {bevel_radius: 0.1, border_size: 0.1, orientation: vertical, style: recround,
+    thickness: 0.01}
+img_name: img_name
+lights:
+    light:
+    - [1, 0, 0, 1]
+    - [1, 0, 0, 1]
+    - [0, 1, 0, 1]
+    - [0, 1, 0, 1]
+    - [1, 1, 1, 1]
+    light_depth: 0.069
+    light_radius: 0.1
+    light_spacing: 0.015
+    light_wall_thickness: 0.01
+    number_total: 3
+sign_parameters:
+    height_total: 1.9
+    position: [0.0, -0.075, -1.57269]
+    radius: 0.05
+    rotation: [0.0, 0.0, -0.139626]
+    sign_height: 0.7300000000000001
+    sign_width: 0.4
