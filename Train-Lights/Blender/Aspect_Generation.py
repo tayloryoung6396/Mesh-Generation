@@ -3,7 +3,9 @@ import numpy as np
 import math
 import os
 import random
-# import yaml
+import yaml
+import json
+
 # from .configuration import configuration
 
 # config_dir = configuration()
@@ -1137,34 +1139,34 @@ def camera_add(location_values, angle_values, type):
         obj.data.sensor_width = 32 # mm 
 
 
-# def sun_position(timestamp, train_lat, train_long):
+def sun_position(timestamp, train_lat, train_long):
 
-#     import sunpos
+    import sunpos
 
-#     train_time = datetime.fromtimestamp(timestamp)
-#     loc=sunpos.cLocation()
-#     time=sunpos.cTime()
+    train_time = datetime.fromtimestamp(timestamp)
+    loc=sunpos.cLocation()
+    time=sunpos.cTime()
 
-#     loc.dLatitude = train_lat
-#     loc.dLongitude = train_long
+    loc.dLatitude = train_lat
+    loc.dLongitude = train_long
     
-#     time.iYear    = int(train_time.year)
-#     time.iMonth   = int(train_time.month)
-#     time.iDay     = int(train_time.day)
-#     time.dHours   = double(train_time.hour)
-#     time.dMinutes = double(train_time.minute)
-#     time.dSeconds = double(train_time.second)
+    time.iYear    = int(train_time.year)
+    time.iMonth   = int(train_time.month)
+    time.iDay     = int(train_time.day)
+    time.dHours   = double(train_time.hour)
+    time.dMinutes = double(train_time.minute)
+    time.dSeconds = double(train_time.second)
     
 
-#     res = sunpos.cSunCoordinates()
-#     sunpos.sunpos(time, loc, res)
-#     zenith = res.dZenithAngle # sun's zenith  angle
-#     azimuth = res.dAzimuth # sun's azimuth  angle:
+    res = sunpos.cSunCoordinates()
+    sunpos.sunpos(time, loc, res)
+    zenith = res.dZenithAngle # sun's zenith  angle
+    azimuth = res.dAzimuth # sun's azimuth  angle:
 
-#     print('azimuth : {}', azimuth)
-#     print('zenith : {}', zenith)
+    print('azimuth : {}', azimuth)
+    print('zenith : {}', zenith)
 
-#     return(zenith, azimuth)
+    return(zenith, azimuth)
 
 
 def sun_location(zenith, azimuth, vel_lat, vel_long):
@@ -1193,12 +1195,16 @@ def sun_location(zenith, azimuth, vel_lat, vel_long):
     p_y2 = p_x * math.sin(theta) + p_y * math.cos(theta)
     p_z2 = p_z
 
+    sun_position = (p_x2, p_y2, p_z2)
+
     # Rotate sun to face origin, starts with vector (0, 0, 1)
     r_x = math.radians(math.asin((1/(math.sqrt(p_z * p_z + p_y * p_y))) * p_y))
     r_y = math.radians(0)
     r_z = math.radians(math.acos((-p_y) / ((math.sqrt(p_x * p_x + p_y * p_y)) + 1)))
 
-    return(p_x2, p_y2, p_z2, r_x, r_y, r_z)
+    sun_rotation = (r_x, r_y, r_z)
+
+    return(sun_position, sun_rotation)
 
 
 def lamp_add(object_number, 
@@ -1302,16 +1308,15 @@ output_data['img_name'] = 'img_name'
 
 
 
-img_number = #get image number from end of string
+img_number = 15 #get image number from end of string
 
-with open('strings.json') as json_data:
+with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/VIRB0045-8.json')) as json_data:
     data = json.load(json_data)
-    for item in data:
-        if item['frame_number'] == img_number:
-            frame_data = data
+    for x in data:
+        if x['frame_number'] == img_number - 1:
+            frame_data = x
             break
-    print('frame number not found')
-
+    print(frame_data['frame_number'])
 
 
 
@@ -1569,19 +1574,15 @@ angle_values = (1.424895, -0.002425, 3.103351)
 
 camera_add(location_values, angle_values, 'PERSP')
 
-# zenith, azimuth = sun_position(frame_data['utc_timestamp'], 
-#                                frame_position_lat, 
-#                                frame_position_long)
-# sun_x, sun_y, sun_z = sun_location(zenith, azimuth)
+zenith, azimuth = sun_position(frame_data['utc_timestamp'], 
+                               frame_data['frame_position_lat'], 
+                               frame_data['frame_position_long'])
+sun_position, sun_rotation = sun_location(zenith, azimuth)
 
-# lamp_add(object_number, 
-#          object_name, 
-#          p_x,
-#          p_y,
-#          p_z,
-#          r_x,
-#          r_y,
-#          r_z)
+lamp_add(object_number, 
+         object_name, 
+         sun_position,
+         sun_rotation)
 
 
 
@@ -1615,8 +1616,8 @@ scene.node_tree.links.new(mix.outputs[0], image_file.inputs['Image'])
 
 
 
-# with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-meta/',
-#                        'meta{:04d}.yaml'.format(fno)),
-#                        'w'
-#                        ) as md:
-#     md.write(yaml.dump(output_data, indent=4))
+with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-meta/',
+                       'meta{:04d}.yaml'.format(fno)),
+                       'w'
+                       ) as md:
+    md.write(yaml.dump(output_data, indent=4))
