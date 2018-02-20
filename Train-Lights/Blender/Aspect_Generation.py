@@ -3,7 +3,7 @@ import numpy as np
 import math
 import os
 import random
-import yaml
+# import yaml
 # from .configuration import configuration
 
 # config_dir = configuration()
@@ -1137,21 +1137,92 @@ def camera_add(location_values, angle_values, type):
         obj.data.sensor_width = 32 # mm 
 
 
-def lamp_add(object_number,
-             object_name):
+# def sun_position(timestamp, train_lat, train_long):
+
+#     import sunpos
+
+#     train_time = datetime.fromtimestamp(timestamp)
+#     loc=sunpos.cLocation()
+#     time=sunpos.cTime()
+
+#     loc.dLatitude = train_lat
+#     loc.dLongitude = train_long
+    
+#     time.iYear    = int(train_time.year)
+#     time.iMonth   = int(train_time.month)
+#     time.iDay     = int(train_time.day)
+#     time.dHours   = double(train_time.hour)
+#     time.dMinutes = double(train_time.minute)
+#     time.dSeconds = double(train_time.second)
+    
+
+#     res = sunpos.cSunCoordinates()
+#     sunpos.sunpos(time, loc, res)
+#     zenith = res.dZenithAngle # sun's zenith  angle
+#     azimuth = res.dAzimuth # sun's azimuth  angle:
+
+#     print('azimuth : {}', azimuth)
+#     print('zenith : {}', zenith)
+
+#     return(zenith, azimuth)
+
+
+def sun_location(zenith, azimuth, vel_lat, vel_long):
+
+    # theta = azimuth - (90 - (vel_long / vel_lat))
+    # if theta < 0:
+    #     theta = 360 + theta
+    # p_x = 200
+    # c = 250
+    # p_y = math.sqrt(p_y*p_y + p_x*p_x - (2 * p_x * p_y * math.cos(theta)))
+
+    # h = (p_y / math.sin(zenith)) * math.sin(90 - zenith)
+
+    # Angle between train vector2d and azimuth
+    theta = azimuth - (90 - (vel_long / vel_lat))
+    if theta < 0:
+        theta = 360 + theta
+
+    # vector of sun given train vector (0, 1, 0)
+    p_x = math.sin(azimuth)*math.cos(zenith)
+    p_y = math.sin(azimuth)*math.sin(zenith)
+    p_z = math.cos(zenith)
+
+    # rotate sun position to account for train vector
+    p_x2 = p_x * math.cos(theta) - p_y * math.sin(theta)
+    p_y2 = p_x * math.sin(theta) + p_y * math.cos(theta)
+    p_z2 = p_z
+
+    # Rotate sun to face origin, starts with vector (0, 0, 1)
+    r_x = math.radians(math.asin((1/(math.sqrt(p_z * p_z + p_y * p_y))) * p_y))
+    r_y = math.radians(0)
+    r_z = math.radians(math.acos((-p_y) / ((math.sqrt(p_x * p_x + p_y * p_y)) + 1)))
+
+    return(p_x2, p_y2, p_z2, r_x, r_y, r_z)
+
+
+def lamp_add(object_number, 
+             object_name, 
+             p_x,
+             p_y,
+             p_z,
+             r_x,
+             r_y,
+             r_z):
     object_number = object_number + 1
     bpy.ops.object.lamp_add(type='HEMI',
-                            location=(100, 20, 400)
+                            location=(p_x, p_y, p_z)
                             )
-    bpy.ops.transform.rotate(value = 0, axis=(0.207868, -0.752946, -0.62439))
     object_name.append(bpy.context.active_object.name)
     obj = objects[object_name[-1]]
     obj.name = 'Main Sun'
     mesh_name = bpy.data.objects['Main Sun'].data.name
     bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[1].default_value = 80
     bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[0].default_value = (1, 1, 1, 1)
-    obj.rotation_euler.x = 0.785398 #0.698132
-    obj.rotation_euler.z = 2.251475 #2.268928
+    obj.rotation_euler.x = r_x
+    obj.rotation_euler.y = r_y
+    obj.rotation_euler.z = r_z
+
 
 def add_signal_lamp(x_light, light_values, background_thickness, light_radius, light_spacing, location):
 
@@ -1228,6 +1299,22 @@ delete_materials()
 load_img()
 
 output_data['img_name'] = 'img_name'
+
+
+
+img_number = #get image number from end of string
+
+with open('strings.json') as json_data:
+    data = json.load(json_data)
+    for item in data:
+        if item['frame_number'] == img_number:
+            frame_data = data
+            break
+    print('frame number not found')
+
+
+
+
 
 # For each light, create the material required
 for i in range(0, light_values.shape[0]):
@@ -1482,7 +1569,41 @@ angle_values = (1.424895, -0.002425, 3.103351)
 
 camera_add(location_values, angle_values, 'PERSP')
 
-lamp_add(object_number, object_name)
+# zenith, azimuth = sun_position(frame_data['utc_timestamp'], 
+#                                frame_position_lat, 
+#                                frame_position_long)
+# sun_x, sun_y, sun_z = sun_location(zenith, azimuth)
+
+# lamp_add(object_number, 
+#          object_name, 
+#          p_x,
+#          p_y,
+#          p_z,
+#          r_x,
+#          r_y,
+#          r_z)
+
+
+
+# Link up our output layers to file output nodes
+nodes = scene.node_tree.nodes
+
+render_layers = nodes.new(type="CompositorNodeRLayers")
+background_layers = nodes.new(type="CompositorNodeImage")
+mix = nodes.new(type="CompositorNodeMixRGB")
+
+indexob_file = nodes.new('CompositorNodeOutputFile')
+image_file = nodes.new('CompositorNodeOutputFile')
+
+indexob_file.base_path = 'output'
+indexob_file.file_slots[0].path = 'stencil'
+image_file.base_path = 'output'
+image_file.file_slots[0].path = 'image'
+
+scene.node_tree.links.new(render_layers.outputs['IndexOB'], indexob_file.inputs['Image'])
+scene.node_tree.links.new(render_layers.outputs['Image'], mix.inputs[2])
+scene.node_tree.links.new(background_layers.outputs['Image'], mix.inputs[1])
+scene.node_tree.links.new(mix.outputs[0], image_file.inputs['Image'])
 
 
 #####################################################################################################################
@@ -1494,120 +1615,8 @@ lamp_add(object_number, object_name)
 
 
 
-with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-meta/',
-                       'meta{:04d}.yaml'.format(fno)),
-                       'w'
-                       ) as md:
-    md.write(yaml.dump(output_data, indent=4))
-
-
-
-def sun_position(timestamp, lat, long):
-
-    time = datetime.fromtimestamp(timestamp)
-
-    dayofyear = 
-
-    time.year
-    time.month
-    time.day
-    time.hour
-    time.minute
-    time.second
-    
-    #946688400
-
-
-
-
-def sunPosition(year, month, day, hour, min, sec, lat, long):
-
-    twopi = 2 * pi
-    deg2rad = pi / 180
-
-    # Get day of the year, e.g. Feb 1 = 32, Mar 1 = 61 on leap years
-    #month.days = c(0,31,28,31,30,31,30,31,31,30,31,30)
-
-    #day = day + cumsum(month.days)[month]
-    leapdays = year % 4 == 0 and (year % 400 == 0 or year % 100 != 0) and day >= 60 and !(month==2 and day==60)
-    day[leapdays] = day[leapdays] + 1
-
-    # Get Julian date - 2400000
-    hour = hour + min / 60 + sec / 3600 # hour plus fraction
-    delta = year - 1949
-    leap = trunc(delta / 4) # former leapyears
-    jd = 32916.5 + delta * 365 + leap + day + hour / 24
-
-    # The input to the Atronomer's almanach is the difference between
-    # the Julian date and JD 2451545.0 (noon, 1 January 2000)
-    time = jd - 51545
-
-    # Ecliptic coordinates
-
-    # Mean longitude
-    mnlong = 280.460 + 0.9856474 * time
-    mnlong = mnlong % 360
-    mnlong[mnlong < 0] = mnlong[mnlong < 0] + 360
-
-    # Mean anomaly
-    mnanom = 357.528 + .9856003 * time
-    mnanom = mnanom % 360
-    mnanom[mnanom < 0] = mnanom[mnanom < 0] + 360
-    mnanom = mnanom * deg2rad
-
-    # Ecliptic longitude and obliquity of ecliptic
-    eclong = mnlong + 1.915 * sin(mnanom) + 0.020 * sin(2 * mnanom)
-    eclong = eclong % 360
-    eclong[eclong < 0] = eclong[eclong < 0] + 360
-    oblqec = 23.439 - 0.0000004 * time
-    eclong = eclong * deg2rad
-    oblqec = oblqec * deg2rad
-
-    # Celestial coordinates
-    # Right ascension and declination
-    num = cos(oblqec) * sin(eclong)
-    den = cos(eclong)
-    ra = atan(num / den)
-    ra[den < 0] = ra[den < 0] + pi
-    ra[den >= 0 and num < 0] = ra[den >= 0 and num < 0] + twopi
-    dec = asin(sin(oblqec) * sin(eclong))
-
-    # Local coordinates
-    # Greenwich mean sidereal time
-    gmst = 6.697375 + .0657098242 * time + hour
-    gmst = gmst % 24
-    gmst[gmst < 0] = gmst[gmst < 0] + 24.
-
-    # Local mean sidereal time
-    lmst = gmst + long / 15.
-    lmst = lmst % 24.
-    lmst[lmst < 0] = lmst[lmst < 0] + 24.
-    lmst = lmst * 15. * deg2rad
-
-    # Hour angle
-    ha = lmst - ra
-    ha[ha < -pi] = ha[ha < -pi] + twopi
-    ha[ha > pi] = ha[ha > pi] - twopi
-
-    # Latitude to radians
-    lat = lat * deg2rad
-
-    # Azimuth and elevation
-    el = asin(sin(dec) * sin(lat) + cos(dec) * cos(lat) * cos(ha))
-    az = asin(-cos(dec) * sin(ha) / cos(el))
-
-    # For logic and names, see Spencer, J.W. 1989. Solar Energy. 42(4):353
-    cosAzPos = (0 <= sin(dec) - sin(el) * sin(lat))
-    sinAzNeg = (sin(az) < 0)
-    az[cosAzPos and sinAzNeg] = az[cosAzPos and sinAzNeg] + twopi
-    az[!cosAzPos] = pi - az[!cosAzPos]
-
-    el = el / deg2rad
-    az = az / deg2rad
-    lat = lat / deg2rad
-
-    return(list(elevation=el, azimuth=az))
-
-
-
-    https://pypi.python.org/pypi/sunpos/1.1
+# with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-meta/',
+#                        'meta{:04d}.yaml'.format(fno)),
+#                        'w'
+#                        ) as md:
+#     md.write(yaml.dump(output_data, indent=4))
