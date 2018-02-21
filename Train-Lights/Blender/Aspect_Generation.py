@@ -1139,85 +1139,12 @@ def camera_add(location_values, angle_values, type):
         obj.data.sensor_width = 32 # mm 
 
 
-def sun_position(timestamp, train_lat, train_long):
-
-    import sunpos
-
-    train_time = datetime.fromtimestamp(timestamp)
-    loc=sunpos.cLocation()
-    time=sunpos.cTime()
-
-    loc.dLatitude = train_lat
-    loc.dLongitude = train_long
-    
-    time.iYear    = int(train_time.year)
-    time.iMonth   = int(train_time.month)
-    time.iDay     = int(train_time.day)
-    time.dHours   = double(train_time.hour)
-    time.dMinutes = double(train_time.minute)
-    time.dSeconds = double(train_time.second)
-    
-
-    res = sunpos.cSunCoordinates()
-    sunpos.sunpos(time, loc, res)
-    zenith = res.dZenithAngle # sun's zenith  angle
-    azimuth = res.dAzimuth # sun's azimuth  angle:
-
-    print('azimuth : {}', azimuth)
-    print('zenith : {}', zenith)
-
-    return(zenith, azimuth)
-
-
-def sun_location(zenith, azimuth, vel_lat, vel_long):
-
-    # theta = azimuth - (90 - (vel_long / vel_lat))
-    # if theta < 0:
-    #     theta = 360 + theta
-    # p_x = 200
-    # c = 250
-    # p_y = math.sqrt(p_y*p_y + p_x*p_x - (2 * p_x * p_y * math.cos(theta)))
-
-    # h = (p_y / math.sin(zenith)) * math.sin(90 - zenith)
-
-    # Angle between train vector2d and azimuth
-    theta = azimuth - (90 - (vel_long / vel_lat))
-    if theta < 0:
-        theta = 360 + theta
-
-    # vector of sun given train vector (0, 1, 0)
-    p_x = math.sin(azimuth)*math.cos(zenith)
-    p_y = math.sin(azimuth)*math.sin(zenith)
-    p_z = math.cos(zenith)
-
-    # rotate sun position to account for train vector
-    p_x2 = p_x * math.cos(theta) - p_y * math.sin(theta)
-    p_y2 = p_x * math.sin(theta) + p_y * math.cos(theta)
-    p_z2 = p_z
-
-    sun_position = (p_x2, p_y2, p_z2)
-
-    # Rotate sun to face origin, starts with vector (0, 0, 1)
-    r_x = math.radians(math.asin((1/(math.sqrt(p_z * p_z + p_y * p_y))) * p_y))
-    r_y = math.radians(0)
-    r_z = math.radians(math.acos((-p_y) / ((math.sqrt(p_x * p_x + p_y * p_y)) + 1)))
-
-    sun_rotation = (r_x, r_y, r_z)
-
-    return(sun_position, sun_rotation)
-
-
 def lamp_add(object_number, 
              object_name, 
-             p_x,
-             p_y,
-             p_z,
-             r_x,
-             r_y,
-             r_z):
+             sun_rotation):
     object_number = object_number + 1
-    bpy.ops.object.lamp_add(type='HEMI',
-                            location=(p_x, p_y, p_z)
+    bpy.ops.object.lamp_add(type='SUN',
+                            location=(0, 0, 0)
                             )
     object_name.append(bpy.context.active_object.name)
     obj = objects[object_name[-1]]
@@ -1225,9 +1152,10 @@ def lamp_add(object_number,
     mesh_name = bpy.data.objects['Main Sun'].data.name
     bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[1].default_value = 80
     bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[0].default_value = (1, 1, 1, 1)
-    obj.rotation_euler.x = r_x
-    obj.rotation_euler.y = r_y
-    obj.rotation_euler.z = r_z
+    obj.rotation_euler.x = sun_rotation[0]
+    obj.rotation_euler.y = sun_rotation[1]
+    obj.rotation_euler.z = sun_rotation[2]
+    
 
 
 def add_signal_lamp(x_light, light_values, background_thickness, light_radius, light_spacing, location):
@@ -1251,12 +1179,93 @@ def add_signal_lamp(x_light, light_values, background_thickness, light_radius, l
 
 
 
-def load_img():
+def load_img(frame_number):
 
     #bpy.context.space_data.show_background_images = True
-    #bpy.data.images.open(filepath="//Output/qldsignals-aspect-01.jpg", directory="/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output/", files=[{"name":"qldsignals-aspect-01.jpg", "name":"qldsignals-aspect-01.jpg"}], relative_path=True, show_multiview=False)
+    filepath = "/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/4tel_train_images/frame" + str(frame_number) + ".jpg"
+    img = bpy.data.images.load(filepath, check_existing=False)
 
-    return
+    return(img)
+
+
+
+
+
+#####################################################################################################################
+#####################################################################################################################
+#                                                   SUN STUFF                                                       #
+#####################################################################################################################
+#####################################################################################################################
+
+
+
+
+def sunpos(timestamp, latitude, longitude):
+
+    earth_mean_radius = 6371.01
+    astronomical_unit = 149597890
+
+    # Calculate the epoch of 1 January 2000 at 12:00pm
+    almanac_epoch = 946688400
+    days_since_epoch = (timestamp - almanac_epoch) / (60 * 60 * 24)
+
+    # Calculate ecliptic coordinates (ecliptic longitude and obliquity of the
+    # ecliptic in radians but without limiting the angle to be less than 2*Pi) 
+    # (i.e., the result may be greater than 2*Pi)
+    omega = 2.1429 - 0.0010394594 * days_since_epoch
+    mean_latitude = 4.8950630 + 0.017202791698 * days_since_epoch # Radians
+    mean_anomaly = 6.2400600 + 0.0172019699 * days_since_epoch
+    ecliptic_longitude = mean_latitude + 0.03341607 * math.sin(mean_anomaly) + 0.00034894 * math.sin(2 * mean_anomaly) - 0.0001134 - 0.0000203 * math.sin(omega)
+    ecliptic_obliquity = 0.4090928 - 6.2140e-9 * days_since_epoch + 0.0000396 * math.cos(omega)
+
+    # Calculate celestial coordinates ( right ascension and declination ) in radians 
+    # but without limiting the angle to be less than 2*Pi (i.e., the result may be 
+    # greater than 2*Pi)
+    dY = math.cos(ecliptic_obliquity) * math.sin(ecliptic_longitude)
+    dX = math.cos(ecliptic_longitude)
+    right_ascension = math.atan2(dY, dX)
+    if right_ascension < 0.0:
+        right_ascension += math.pi * 2.0
+    declination = math.asin(math.sin(ecliptic_obliquity) * math.sin(ecliptic_longitude))
+    
+
+    # Calculate local coordinates ( azimuth and zenith angle ) in degrees
+    #greenwich_mean_side_real_time = 6.6974243242 + 0.0657098283 * days_since_epoch + dDecimalHours
+    gmst = 18.697374558 + 24.06570982441908 * days_since_epoch
+    #dLocalMeanSiderealTime = (rad * dGreenwichMeanSiderealTime * 15) + udtLocation.dLongitude
+    lmst = (gmst * 15 * (math.pi / 180) + longitude)
+    hour_angle = lmst - right_ascension
+
+
+    zenith = math.acos(math.cos(latitude) * math.cos(hour_angle) * math.cos(declination) + math.sin(declination) * math.sin(latitude))
+    dY = -math.sin(hour_angle)
+    dX = math.tan(declination) * math.cos(latitude) - math.sin(latitude) * math.cos(hour_angle)
+    
+    azimuth = math.atan2(dY, dX)
+    if azimuth < 0.0:
+        azimuth += math.pi * 2.0
+
+    # Parallax Correction
+    parallax = (earth_mean_radius / astronomical_unit) * math.sin(zenith)
+    zenith += parallax
+
+    return (zenith, azimuth)
+
+
+def sun_location(zenith, azimuth, heading):
+
+    theta = math.pi * 2.0 - (heading * (math.pi / 180)) + azimuth
+
+    sun_rotation = (theta,
+                    0,
+                    zenith - 1.57)
+
+    print('zenith d: {}'.format(zenith / (math.pi / 180)))
+    print('azimuth d: {}'.format(azimuth / (math.pi / 180)))
+    print('heading d: {}'.format(heading))
+    print('theta d: {}'.format(theta / (math.pi / 180)))
+
+    return(sun_rotation)
 
 
 #####################################################################################################################
@@ -1283,8 +1292,8 @@ scene.render.layers['RenderLayer'].use_pass_object_index = True
 scene.use_nodes = True
 
 # Set resolution, and render at that resolution
-scene.render.resolution_x = 4500
-scene.render.resolution_y = 2300
+scene.render.resolution_x = 1920
+scene.render.resolution_y = 1080
 scene.render.resolution_percentage = 100
 
 scene = bpy.context.scene
@@ -1302,18 +1311,29 @@ scene.update()
 
 delete_materials()
 
-load_img()
 
-output_data['img_name'] = 'img_name'
+#Set random position values
+
+# sign_rotation
+# sign_position
 
 
 
-img_number = 15 #get image number from end of string
+
+frame_number = 11970
+
+background_img = load_img(frame_number)
+
+output_data['img_name'] = 'frame' + str(frame_number) + '.jpg'
+
+
+img_number = frame_number #get image number from end of string
+
 
 with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/VIRB0045-8.json')) as json_data:
     data = json.load(json_data)
     for x in data:
-        if x['frame_number'] == img_number - 1:
+        if x['frame_number'] == img_number:
             frame_data = x
             break
     print(frame_data['frame_number'])
@@ -1574,14 +1594,18 @@ angle_values = (1.424895, -0.002425, 3.103351)
 
 camera_add(location_values, angle_values, 'PERSP')
 
-zenith, azimuth = sun_position(frame_data['utc_timestamp'], 
-                               frame_data['frame_position_lat'], 
-                               frame_data['frame_position_long'])
-sun_position, sun_rotation = sun_location(zenith, azimuth)
+zenith, azimuth = sunpos(frame_data['utc_timestamp'], 
+                        (frame_data['frame_position_lat'] / (math.pi / 180)), 
+                        (frame_data['frame_position_long'] / (math.pi / 180))
+                        )
+
+sun_rotation = sun_location(zenith, 
+                            azimuth,
+                            frame_data['frame_heading']
+                            )
 
 lamp_add(object_number, 
          object_name, 
-         sun_position,
          sun_rotation)
 
 
@@ -1601,10 +1625,16 @@ indexob_file.file_slots[0].path = 'stencil'
 image_file.base_path = 'output'
 image_file.file_slots[0].path = 'image'
 
+background_layers.image = background_img
+
 scene.node_tree.links.new(render_layers.outputs['IndexOB'], indexob_file.inputs['Image'])
 scene.node_tree.links.new(render_layers.outputs['Image'], mix.inputs[2])
 scene.node_tree.links.new(background_layers.outputs['Image'], mix.inputs[1])
+scene.node_tree.links.new(render_layers.outputs['Alpha'], mix.inputs[0])
 scene.node_tree.links.new(mix.outputs[0], image_file.inputs['Image'])
+
+composite = nodes.new(type='CompositorNodeComposite')
+scene.node_tree.links.new(mix.outputs[0], composite.inputs[0])
 
 
 #####################################################################################################################
