@@ -3,8 +3,8 @@ import numpy as np
 import math
 import os
 import random
-import yaml
-import json
+# import yaml
+# import json
 
 # from .configuration import configuration
 
@@ -61,6 +61,10 @@ def configuration():
 
 
 config_dir = configuration()
+
+
+
+
 
 
 sign_values = np.array([[config_dir['background']['colour']['diffuse'][0], 
@@ -1181,8 +1185,8 @@ def add_signal_lamp(x_light, light_values, background_thickness, light_radius, l
 
 def load_img(frame_number):
 
-    #bpy.context.space_data.show_background_images = True
-    filepath = "/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/4tel_train_images/frame" + str(frame_number) + ".jpg"
+    #filepath = "/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/4tel_train_images/frame" + str(frame_number) + ".jpg"
+    filepath = "C:/Users/Taylor/OneDrive - The University Of Newcastle/Code/Mesh-Generation/Train-Lights/Blender/Input/frame" + str(frame_number) + ".jpg"
     img = bpy.data.images.load(filepath, check_existing=False)
 
     return(img)
@@ -1249,16 +1253,22 @@ def sunpos(timestamp, latitude, longitude):
     parallax = (earth_mean_radius / astronomical_unit) * math.sin(zenith)
     zenith += parallax
 
+    print('zenith sunpos rads: {}'.format(zenith))
+    print('azimuth sunpos rads: {}'.format(azimuth))
+    
     return (zenith, azimuth)
 
 
 def sun_location(zenith, azimuth, heading):
+    
+    print('zenith sl top rads: {}'.format(zenith))
+    print('azimuth sl top rads: {}'.format(azimuth))
 
-    theta = math.pi * 2.0 - (heading * (math.pi / 180)) + azimuth
-
-    sun_rotation = (theta,
+    #theta = math.pi *2.0 - (heading * (math.pi / 180)) + azimuth
+    theta = heading * (math.pi / 180) - azimuth
+    sun_rotation = (-zenith,
                     0,
-                    zenith - 1.57)
+                    theta)
 
     print('zenith d: {}'.format(zenith / (math.pi / 180)))
     print('azimuth d: {}'.format(azimuth / (math.pi / 180)))
@@ -1330,13 +1340,13 @@ output_data['img_name'] = 'frame' + str(frame_number) + '.jpg'
 img_number = frame_number #get image number from end of string
 
 
-with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/VIRB0045-8.json')) as json_data:
-    data = json.load(json_data)
-    for x in data:
-        if x['frame_number'] == img_number:
-            frame_data = x
-            break
-    print(frame_data['frame_number'])
+# with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/VIRB0045-8.json')) as json_data:
+#     data = json.load(json_data)
+#     for x in data:
+#         if x['frame_number'] == img_number:
+#             frame_data = x
+#             break
+#     print(frame_data['frame_number'])
 
 
 
@@ -1594,6 +1604,34 @@ angle_values = (1.424895, -0.002425, 3.103351)
 
 camera_add(location_values, angle_values, 'PERSP')
 
+
+def frame_stuff():
+
+    config = {
+        # 11970
+        'utc_timestamp' : 1489093023,
+        'frame_position_lat' : -33.423610315,
+        'frame_position_long' : 149.585649565,
+        'frame_heading' : 247.275
+
+        # # 0
+        # 'utc_timestamp' : 1489092624,
+        # 'frame_position_lat' : -33.423566336,
+        # 'frame_position_long' : 149.623483399,
+        # 'frame_heading' : 285.755
+
+
+        # Test data
+        #'utc_timestamp' : 1489092624,
+        #'frame_position_lat' : -33.423566336,
+        #'frame_position_long' : 149.623483399,
+        #'frame_heading' : 285.755
+    }
+    return config
+
+
+frame_data = frame_stuff()
+
 zenith, azimuth = sunpos(frame_data['utc_timestamp'], 
                         (frame_data['frame_position_lat'] / (math.pi / 180)), 
                         (frame_data['frame_position_long'] / (math.pi / 180))
@@ -1646,8 +1684,8 @@ scene.node_tree.links.new(mix.outputs[0], composite.inputs[0])
 
 
 
-with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-meta/',
-                       'meta{:04d}.yaml'.format(fno)),
-                       'w'
-                       ) as md:
-    md.write(yaml.dump(output_data, indent=4))
+# with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-meta/',
+#                        'meta{:04d}.yaml'.format(fno)),
+#                        'w'
+#                        ) as md:
+#     md.write(yaml.dump(output_data, indent=4))
