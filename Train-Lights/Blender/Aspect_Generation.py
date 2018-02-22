@@ -8,6 +8,11 @@ import json
 
 # from .configuration import configuration
 
+Input_meta_file  = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/VIRB0045-8.json'
+Output_meta_file = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-meta/'
+Input_img_file   = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Input/'
+
+
 # config_dir = configuration()
 
 def configuration():
@@ -19,51 +24,64 @@ def configuration():
         'background': {
             'style' : 'reccir', # rectangle, circle, reccir, cirtri, square, recround
             'orientation' : 'vertical', # vertical, horizontal
-            'border_size' : 0.1,
+            'border_size' : 0.1, # Range []
             'thickness' : 0.01,
-            'bevel_radius' : 0.1,
-            'colour' : {
-                'diffuse' : [0.06, 0.06, 0.06],     # [R, G, B]   # Unused
-                'reflection1' : [0.06, 0.06, 0.06], # [R, G, B]   # Unused
-                'reflection2' : [0.06, 0.06, 0.06], # [R, G, B]   # Unused
-                'glossy' : [0.06, 0.06, 0.06]       # [R, G, B]   # Unused
-                }
+            'bevel_radius' : 0.1, # Range []
+            'post' : {
+                'roughness_p' : 0.3,
+                'reflection_p' : 0.5,
+                'diffuse_p' : (0, 0, 0),
+                'glossy_p' : (0.039, 0.045, 0.056),
+                'noise_p' : (10, 1, 0)
+            },
+            'sign' : {
+                'roughness_s' = 0.05,
+                'reflection_s' = 0.6,
+                'diffuse_s' = (0, 0, 0),
+                'glossy_s' = (0.009, 0.010, 0.012),
+                'noise_s' = (2, 1, 6)
+            }
         },
         'lights' : {
-            'number_total' : 3,
+            'number_total' : 3, # Range [1, 5]
             'light' : ([[0, 1, 0, 'off'],
                         [1, 0, 0, 'off'],
                         [0, 1, 0, 'blank'],
                         [0, 1, 0, 'blank'],
                         [1, 1, 1, 'off'],
                         [1, 0, 0, 'off']]),
-            'light_can_depth' : 0.069,
-            'light_spacing' : 0.015,
-            'light_radius' : 0.1,
-            'light_wall_thickness' : 0.01
+            'light_can_depth' : 0.069, # Range [0.03, 0.069]
+            'light_spacing' : 0.015, # Range []
+            'light_radius' : 0.1, # Range []
+            'light_wall_thickness' : 0.01 # Range []
         },
         'sign_parameters' : {
-            'height' : 1.6,
+            'height' : 1.6, # Range [0.5, 2]
             'radius' : 0.05,
             'position' : {
-                'x' : 0,
-                'y' : -0.075,
-                'z' : -1.57269
+                'x' : 0, # Range [] left right maybe should be related and follow some relationship / array to account for other lines
+                'y' : -0.075, # Range [] front back maybe should be related and follow some relationship / array to account for other lines
+                'z' : -1.57269 # Fixed
             },
             'rotation' : {
-                'x' : 0,
-                'y' : 0,
-                'z' : 0
+                'x' : 0, # Range [0]
+                'y' : 0, # Range [0]
+                'z' : 0 # Range [-10, 10] [170, 190] # TODO add front back variable and insert this rotation in it
+                                                     # also alter positive negative depending on left or right
+                                                     # probably fix this value to a small range [6, 10]
             }
+        },
+        'camera_parameters' : {
+            'type' : 'PERSP', # PANO, PERSP
+            'FOV' : 2.37365,
+            'lens' : 35, # mm
+            'sensor_width' : 32 # mm
         }
     }
     return config
 
 
 config_dir = configuration()
-
-
-
 
 
 
@@ -119,7 +137,6 @@ light_spacing =         config_dir['lights']['light_spacing']
 light_radius =          config_dir['lights']['light_radius']
 light_wall_thickness =  config_dir['lights']['light_wall_thickness']
 
-
 sign_height =   config_dir['sign_parameters']['height']
 post_radius =   config_dir['sign_parameters']['radius']
 
@@ -130,7 +147,6 @@ sign_position = np.array([config_dir['sign_parameters']['position']['x'],
 sign_rotation = np.array([config_dir['sign_parameters']['rotation']['x'],
                          config_dir['sign_parameters']['rotation']['y'],
                          config_dir['sign_parameters']['rotation']['z']])
-
 
 # Set maximum number of lights for some designs
 if style == 'circle':
@@ -149,12 +165,18 @@ elif style == 'square':
 else:
     number_total = config_dir['lights']['number_total']
 
+draw_background = {
+    'rectangle' : draw_background_rec,
+    'reccir' : draw_background_reccir,
+    'recround' : draw_background_recround,
+    'circle' : draw_background_cir,
+    'cirtri' : draw_background_cirtri,
+    'square' : draw_background_squ
+}
+
 object_number = 0    #Ranom Variable (Number of objects)
 object_name = [0]
 fno = 1
-
-
-
 
 output_data = {
         'img_name' : '',
@@ -184,9 +206,6 @@ output_data = {
         'frame_data' : {
         }
     }
-
-
-
 
 # Remove previous materials (for testing)
 def delete_materials():
@@ -399,7 +418,6 @@ def draw_background_reccir(light_radius,
 
     return obj1
 
-
 def draw_background_recround(light_radius, 
                              background_thickness,
                              border_size,
@@ -489,7 +507,6 @@ def draw_background_recround(light_radius,
 
     return obj
 
-
 def draw_background_squ(light_radius, 
                         background_thickness,
                         border_size,
@@ -526,13 +543,11 @@ def draw_background_squ(light_radius,
 
     return obj
 
-
 #####################################################################################################################
 #####################################################################################################################
 #                                                    LIGHTS                                                         #
 #####################################################################################################################
 #####################################################################################################################
-
 
 def draw_can(object_number,
              light_radius,
@@ -826,7 +841,6 @@ def move_can(style,
 
     return obj
 
-
 def draw_post(object_number,
               number_total,
               light_radius,
@@ -854,13 +868,11 @@ def draw_post(object_number,
 
     return(obj1)
 
-
 #####################################################################################################################
 #####################################################################################################################
 #                                                   MATERIALS                                                       #
 #####################################################################################################################
 #####################################################################################################################
-
 
 def light_glass_material(light_values, 
                          i, 
@@ -1102,21 +1114,38 @@ def PBR_Dielectric(roughness,
 
     node_tree.links.new(output.inputs[0], mix_1.outputs[0])
 
-
-def compositor():
+def compositor(frame_number,
+               background_img):
+    
     # Link up our output layers to file output nodes
     nodes = scene.node_tree.nodes
-    render_layers = scene.node_tree.nodes['Render Layers']
+
+    render_layers = nodes.new(type="CompositorNodeRLayers")
+    background_layers = nodes.new(type="CompositorNodeImage")
+    mix = nodes.new(type="CompositorNodeMixRGB")
+    mask = nodes.new(type="CompositorNodeIDMask")
+    mask.index = 1
+
+
     indexob_file = nodes.new('CompositorNodeOutputFile')
     image_file = nodes.new('CompositorNodeOutputFile')
-    indexob_file.base_path = 'output'
-    indexob_file.file_slots[0].path = 'stencil'
-    image_file.base_path = 'output'
-    image_file.file_slots[0].path = 'image'
 
-    scene.node_tree.links.new(render_layers.outputs['IndexOB'], indexob_file.inputs['Image'])
-    scene.node_tree.links.new(render_layers.outputs['Image'], image_file.inputs['Image'])
+    indexob_file.base_path = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-stn/'
+    indexob_file.file_slots[0].path = 'stencil' + str(frame_number)
+    image_file.base_path = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-img/'
+    image_file.file_slots[0].path = 'image' + str(frame_number)
 
+    background_layers.image = background_img
+
+    scene.node_tree.links.new(render_layers.outputs['IndexOB'], mask.inputs[0])
+    scene.node_tree.links.new(mask.outputs[0], indexob_file.inputs['Image'])
+    scene.node_tree.links.new(render_layers.outputs['Image'], mix.inputs[2])
+    scene.node_tree.links.new(background_layers.outputs['Image'], mix.inputs[1])
+    scene.node_tree.links.new(render_layers.outputs['Alpha'], mix.inputs[0])
+    scene.node_tree.links.new(mix.outputs[0], image_file.inputs['Image'])
+
+    composite = nodes.new(type='CompositorNodeComposite')
+    scene.node_tree.links.new(mix.outputs[0], composite.inputs[0])
 
 #####################################################################################################################
 #####################################################################################################################
@@ -1124,8 +1153,7 @@ def compositor():
 #####################################################################################################################
 #####################################################################################################################
 
-
-def camera_add(location_values, angle_values, type):
+def camera_add(location_values, angle_values, camera):
 
     bpy.ops.object.camera_add(location=(location_values), 
                               rotation=(angle_values))
@@ -1134,16 +1162,15 @@ def camera_add(location_values, angle_values, type):
     obj = bpy.data.objects[object_name[-1]]
 
     if type == 'PANO':
-        obj.data.type = 'PANO'
+        obj.data.type = camera['type']
         obj.data.cycles.panorama_type = 'FISHEYE_EQUIDISTANT'
-        obj.data.cycles.fisheye_fov = 2.37365 # 136 degrees
-        obj.data.sensor_width = 32 # mm 
+        obj.data.cycles.fisheye_fov = camera['FOV']
+        obj.data.sensor_width = camera['sensor_width'] 
 
     else:   
-        obj.data.type = 'PERSP'
-        obj.data.lens = 35
-        obj.data.sensor_width = 32 # mm 
-
+        obj.data.type = camera['type']
+        obj.data.lens = camera['lens']
+        obj.data.sensor_width = camera['sensor_width'] 
 
 def lamp_add(object_number, 
              object_name, 
@@ -1161,8 +1188,6 @@ def lamp_add(object_number,
     obj.rotation_euler.x = sun_rotation[0]
     obj.rotation_euler.y = sun_rotation[1]
     obj.rotation_euler.z = sun_rotation[2]
-    
-
 
 def add_signal_lamp(x_light, light_values, background_thickness, light_radius, light_spacing, location):
 
@@ -1183,29 +1208,20 @@ def add_signal_lamp(x_light, light_values, background_thickness, light_radius, l
     bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[0].default_value = light_values
     obj.rotation_euler.x = 1.57
 
-
-
 def load_img(frame_number):
 
     #filepath = "/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/4tel_train_images/frame" + str(frame_number) + ".jpg"
-    filepath = "/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Input/frame" + str(frame_number) + ".jpg"
+    filepath = Input_img_file + 'frame' + str(frame_number) + '.jpg'
     #filepath = "C:/Users/Taylor/OneDrive - The University Of Newcastle/Code/Mesh-Generation/Train-Lights/Blender/Input/frame" + str(frame_number) + ".jpg"
     img = bpy.data.images.load(filepath, check_existing=False)
 
     return(img)
-
-
-
-
 
 #####################################################################################################################
 #####################################################################################################################
 #                                                   SUN STUFF                                                       #
 #####################################################################################################################
 #####################################################################################################################
-
-
-
 
 def sunpos(timestamp, latitude, longitude):
 
@@ -1237,9 +1253,7 @@ def sunpos(timestamp, latitude, longitude):
     
 
     # Calculate local coordinates ( azimuth and zenith angle ) in degrees
-    #greenwich_mean_side_real_time = 6.6974243242 + 0.0657098283 * days_since_epoch + dDecimalHours
     gmst = 18.697374558 + 24.06570982441908 * days_since_epoch
-    #dLocalMeanSiderealTime = (rad * dGreenwichMeanSiderealTime * 15) + udtLocation.dLongitude
     lmst = (gmst * 15 * (math.pi / 180) + longitude)
     hour_angle = lmst - right_ascension
 
@@ -1263,21 +1277,12 @@ def sunpos(timestamp, latitude, longitude):
 
 
 def sun_location(zenith, azimuth, heading):
-    
-    print('zenith sl top rads: {}'.format(zenith))
-    print('azimuth sl top rads: {}'.format(azimuth))
-    print('heading sl top rads: {}'.format(heading))
 
-    #theta = math.pi *2.0 - (heading * (math.pi / 180)) + azimuth
+    # Account for Heading to Azimuth
     theta = heading - azimuth
     sun_rotation = (-zenith,
                     0,
                     theta)
-
-    print('zenith d: {}'.format(zenith / (math.pi / 180)))
-    print('azimuth d: {}'.format(azimuth / (math.pi / 180)))
-    print('heading d: {}'.format(heading / (math.pi / 180)))
-    print('theta d: {}'.format(theta / (math.pi / 180)))
 
     return(sun_rotation)
 
@@ -1322,14 +1327,17 @@ scene.update()
 #####################################################################################################################
 #####################################################################################################################
 
+# Used for generating multiple images
+
 # directory = "/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Input/"
 
 # for filename in os.listdir(directory):
 #     if filename.endswith(".jpg") or filename.endswith(".py"): 
-#         # print(os.path.join(directory, filename))
+#         print(os.path.join(directory, filename))
 #         continue
 #     else:
 #         continue
+
 
 delete_materials()
 
@@ -1338,7 +1346,7 @@ delete_materials()
 # frame_number = frame_number.rstrip('.jpg')
 # frame_number = int(frame_number)
 
-frame_number = 3150
+frame_number = 3150 # TODO temporary
 
 background_img = load_img(frame_number)
 
@@ -1346,8 +1354,8 @@ output_data['img_name'] = 'frame' + str(frame_number) + '.jpg'
 
 img_number = frame_number #get image number from end of string
 
-
-with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/VIRB0045-8.json')) as json_data:
+# Read in meta data
+with open(os.path.join(Input_meta_file)) as json_data:
     data = json.load(json_data)
     for x in data:
         if x['frame_number'] == img_number:
@@ -1373,22 +1381,22 @@ for i in range(0, light_values.shape[0]):
         light_glass_off_material(light_values, i)
 
 # Create the sign material
-roughness = 0.05
-reflection = 0.6
-diffuse = (0, 0, 0)
-glossy = (0.009, 0.010, 0.012)
-noise = (2, 1, 6)
-
-PBR_Dielectric(roughness, reflection, diffuse, glossy, noise, 'PBR_Dielectric')
+PBR_Dielectric(config_dir['Background']['Sign']roughness_s, 
+               config_dir['Background']['Sign']reflection_s,
+               config_dir['Background']['Sign']diffuse_s, 
+               config_dir['Background']['Sign']glossy_s, 
+               config_dir['Background']['Sign']noise_s, 
+               'PBR_Dielectric'
+               )
 
 # Create the post material
-roughness = 0.3
-reflection = 0.5
-diffuse = (0, 0, 0)
-glossy = (0.039, 0.045, 0.056)
-noise = (10, 1, 0)
-
-PBR_Dielectric(roughness, reflection, diffuse, glossy, noise, 'PBR_Dielectric_post')
+PBR_Dielectric(config_dir['Background']['Post']roughness_p, 
+               config_dir['Background']['Post']reflection_p, 
+               config_dir['Background']['Post']diffuse_p, 
+               config_dir['Background']['Post']glossy_p, 
+               config_dir['Background']['Post']noise_p,
+               'PBR_Dielectric_post'
+               )
 
 
 objects = bpy.data.objects
@@ -1491,70 +1499,14 @@ for x_light in range (0, (number_total)):
 
 
 # Make background sign
-if style == 'rectangle':
-    background_obj = draw_background_rec(light_radius, 
-                                         thickness,
-                                         border_size,
-                                         number_total,
-                                         object_number,
-                                         light_spacing,
-                                         orientation
-                                         )
-                        
-
-elif style == 'reccir':
-    background_obj = draw_background_reccir(light_radius, 
-                                            thickness,
-                                            border_size,
-                                            number_total,
-                                            object_number,
-                                            light_spacing,
-                                            orientation
-                                            )
-
-elif style == 'recround':
-    background_obj = draw_background_recround(light_radius, 
-                                            thickness,
-                                            border_size,
-                                            number_total,
-                                            object_number,
-                                            light_spacing,
-                                            orientation,
-                                            bevel_radius
-                                            )
-
-elif style == 'circle':
-    background_obj = draw_background_cir(light_radius, 
-                                         thickness,
-                                         border_size,
-                                         number_total,
-                                         object_number,
-                                         light_spacing,
-                                         orientation
-                                         )
-
-elif style == 'cirtri':
-    background_obj = draw_background_cirtri(light_radius, 
-                                         thickness,
-                                         border_size,
-                                         number_total,
-                                         object_number,
-                                         light_spacing,
-                                         orientation
-                                         )
-
-elif style == 'square':
-    background_obj = draw_background_squ(light_radius, 
-                                         thickness,
-                                         border_size,
-                                         number_total,
-                                         object_number,
-                                         light_spacing,
-                                         orientation
-                                         )
-
-else:
-    print('Background style Unknown')
+background_obj = draw_background[style](light_radius, 
+                                        thickness,
+                                        border_size,
+                                        number_total,
+                                        object_number,
+                                        light_spacing,
+                                        orientation
+                                        )
 
 # Make post
 post_obj = draw_post(object_number,
@@ -1593,12 +1545,13 @@ obj.rotation_euler.x = sign_rotation[0]
 obj.rotation_euler.y = sign_rotation[1]
 obj.rotation_euler.z = sign_rotation[2] # 8 deg
 
+# TODO fix stencil
 obj.pass_index = 1
 
 
 #####################################################################################################################
 #####################################################################################################################
-#                                          SHADOW CATCHER    CAMERA    LAMPS                                        #
+#                                    SHADOW CATCHER    CAMERA    LAMPS    COMPOSITOR                                #
 #####################################################################################################################
 #####################################################################################################################
 
@@ -1612,35 +1565,8 @@ bpy.context.object.cycles.is_shadow_catcher = True
 location_values = (0.94495, 14.53555, 0.79661)
 angle_values = (1.424895, -0.002425, 3.103351)
 
-camera_add(location_values, angle_values, 'PERSP')
+camera_add(location_values, angle_values, config_dir['camera_parameters'])
 
-
-# def frame_stuff():
-
-#     config = {
-#         # 11970
-#         'utc_timestamp' : 1489093023,
-#         'frame_position_lat' : -33.423610315,
-#         'frame_position_long' : 149.585649565,
-#         'frame_heading' : 247.275
-
-#         # # 0
-#         # 'utc_timestamp' : 1489092624,
-#         # 'frame_position_lat' : -33.423566336,
-#         # 'frame_position_long' : 149.623483399,
-#         # 'frame_heading' : 285.755
-
-
-#         # Test data
-#         #'utc_timestamp' : 1489092624,
-#         #'frame_position_lat' : -33.423566336,
-#         #'frame_position_long' : 149.623483399,
-#         #'frame_heading' : 285.755
-#     }
-#     return config
-
-
-# frame_data = frame_stuff()
 
 zenith, azimuth = sunpos(frame_data['utc_timestamp'], 
                         (frame_data['frame_position_lat'] * (math.pi / 180)), 
@@ -1657,44 +1583,16 @@ lamp_add(object_number,
          sun_rotation)
 
 
-
-# Link up our output layers to file output nodes
-nodes = scene.node_tree.nodes
-
-render_layers = nodes.new(type="CompositorNodeRLayers")
-background_layers = nodes.new(type="CompositorNodeImage")
-mix = nodes.new(type="CompositorNodeMixRGB")
-mask = nodes.new(type="CompositorNodeIDMask")
-mask.index = 1
-
-
-indexob_file = nodes.new('CompositorNodeOutputFile')
-image_file = nodes.new('CompositorNodeOutputFile')
-
-indexob_file.base_path = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-stn/'
-indexob_file.file_slots[0].path = 'stencil' + str(frame_number)
-image_file.base_path = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-img/'
-image_file.file_slots[0].path = 'image' + str(frame_number)
-
-background_layers.image = background_img
-
-scene.node_tree.links.new(render_layers.outputs['IndexOB'], mask.inputs[0])
-scene.node_tree.links.new(mask.outputs[0], indexob_file.inputs['Image'])
-scene.node_tree.links.new(render_layers.outputs['Image'], mix.inputs[2])
-scene.node_tree.links.new(background_layers.outputs['Image'], mix.inputs[1])
-scene.node_tree.links.new(render_layers.outputs['Alpha'], mix.inputs[0])
-scene.node_tree.links.new(mix.outputs[0], image_file.inputs['Image'])
-
-composite = nodes.new(type='CompositorNodeComposite')
-scene.node_tree.links.new(mix.outputs[0], composite.inputs[0])
-
+compositor(frame_number,
+           background_img)
 
 #####################################################################################################################
 #####################################################################################################################
-#                                                 INFORMATION SAVING                                                #
+#                                              INFORMATION SAVING    RENDER                                         #
 #####################################################################################################################
 #####################################################################################################################
 
+# TODO Fix auto rendering
 
 #scene.update()
 
@@ -1704,7 +1602,7 @@ scene.node_tree.links.new(mix.outputs[0], composite.inputs[0])
 
 output_data['frame_data'] = frame_data
 
-with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-meta/',
+with open(os.path.join(Output_meta_file,
                        'meta{:04d}.yaml'.format(frame_number)),
                        'w'
                        ) as md:
