@@ -2,7 +2,7 @@
 
 # create a folder to store extracted images
 import os
-folder = '4tel_train_images'  
+folder = 'Input'  
 os.mkdir(folder)
 # use opencv to do the job
 import cv2

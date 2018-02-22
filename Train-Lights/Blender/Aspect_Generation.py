@@ -3,8 +3,8 @@ import numpy as np
 import math
 import os
 import random
-# import yaml
-# import json
+import yaml
+import json
 
 # from .configuration import configuration
 
@@ -17,7 +17,7 @@ def configuration():
 
     config = {
         'background': {
-            'style' : 'recround', # rectangle, circle, reccir, cirtri, square, recround
+            'style' : 'reccir', # rectangle, circle, reccir, cirtri, square, recround
             'orientation' : 'vertical', # vertical, horizontal
             'border_size' : 0.1,
             'thickness' : 0.01,
@@ -31,9 +31,9 @@ def configuration():
         },
         'lights' : {
             'number_total' : 3,
-            'light' : ([[1, 0, 0, 'on'],
-                        [1, 0, 0, 'on'],
-                        [0, 1, 0, 'off'],
+            'light' : ([[0, 1, 0, 'off'],
+                        [1, 0, 0, 'off'],
+                        [0, 1, 0, 'blank'],
                         [0, 1, 0, 'blank'],
                         [1, 1, 1, 'off'],
                         [1, 0, 0, 'off']]),
@@ -43,7 +43,7 @@ def configuration():
             'light_wall_thickness' : 0.01
         },
         'sign_parameters' : {
-            'height' : 1.9,
+            'height' : 1.6,
             'radius' : 0.05,
             'position' : {
                 'x' : 0,
@@ -53,7 +53,7 @@ def configuration():
             'rotation' : {
                 'x' : 0,
                 'y' : 0,
-                'z' : -0.139626
+                'z' : 0
             }
         }
     }
@@ -180,6 +180,8 @@ output_data = {
             'sign_width' : '',
             'position' : sign_position.tolist(),
             'rotation' : sign_rotation.tolist(),
+        },
+        'frame_data' : {
         }
     }
 
@@ -872,9 +874,9 @@ def light_glass_material(light_values,
                    light_values[i][2],
                    1)
 
-    diffuse_value = (light_values[i][0] * 0.6, 
-                     light_values[i][1] * 0.6, 
-                     light_values[i][2] * 0.6,
+    diffuse_value = (light_values[i][0] * 0.6 / 30, 
+                     light_values[i][1] * 0.6 / 30, 
+                     light_values[i][2] * 0.6 / 30,
                      1)
 
     mat = bpy.data.materials.get('light_glass_material_' 
@@ -945,9 +947,9 @@ def light_glass_off_material(light_values, i):
                    light_values[i][2] * 0.1,
                    1)
 
-    diffuse_value = (light_values[i][0] * 0.05, 
-                     light_values[i][1] * 0.05, 
-                     light_values[i][2] * 0.05,
+    diffuse_value = (light_values[i][0] * 0.05 * 0.01, 
+                     light_values[i][1] * 0.05 * 0.01, 
+                     light_values[i][2] * 0.05 * 0.01,
                      1)
 
     translucent_value = (light_values[i][0] * 0.05, 
@@ -1154,7 +1156,7 @@ def lamp_add(object_number,
     obj = objects[object_name[-1]]
     obj.name = 'Main Sun'
     mesh_name = bpy.data.objects['Main Sun'].data.name
-    bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[1].default_value = 80
+    bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[1].default_value = 50
     bpy.data.lamps[mesh_name].node_tree.nodes['Emission'].inputs[0].default_value = (1, 1, 1, 1)
     obj.rotation_euler.x = sun_rotation[0]
     obj.rotation_euler.y = sun_rotation[1]
@@ -1186,7 +1188,8 @@ def add_signal_lamp(x_light, light_values, background_thickness, light_radius, l
 def load_img(frame_number):
 
     #filepath = "/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/4tel_train_images/frame" + str(frame_number) + ".jpg"
-    filepath = "C:/Users/Taylor/OneDrive - The University Of Newcastle/Code/Mesh-Generation/Train-Lights/Blender/Input/frame" + str(frame_number) + ".jpg"
+    filepath = "/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Input/frame" + str(frame_number) + ".jpg"
+    #filepath = "C:/Users/Taylor/OneDrive - The University Of Newcastle/Code/Mesh-Generation/Train-Lights/Blender/Input/frame" + str(frame_number) + ".jpg"
     img = bpy.data.images.load(filepath, check_existing=False)
 
     return(img)
@@ -1263,16 +1266,17 @@ def sun_location(zenith, azimuth, heading):
     
     print('zenith sl top rads: {}'.format(zenith))
     print('azimuth sl top rads: {}'.format(azimuth))
+    print('heading sl top rads: {}'.format(heading))
 
     #theta = math.pi *2.0 - (heading * (math.pi / 180)) + azimuth
-    theta = heading * (math.pi / 180) - azimuth
+    theta = heading - azimuth
     sun_rotation = (-zenith,
                     0,
                     theta)
 
     print('zenith d: {}'.format(zenith / (math.pi / 180)))
     print('azimuth d: {}'.format(azimuth / (math.pi / 180)))
-    print('heading d: {}'.format(heading))
+    print('heading d: {}'.format(heading / (math.pi / 180)))
     print('theta d: {}'.format(theta / (math.pi / 180)))
 
     return(sun_rotation)
@@ -1294,7 +1298,7 @@ for object in bpy.data.objects:
 # # Change to the cycles renderer and setup some options
 bpy.context.scene.render.engine = 'CYCLES'
 scene = bpy.data.scenes['Scene']
-scene.cycles.device = 'CPU'
+scene.cycles.device = 'GPU'
 scene.cycles.samples = 256
 
 # Enable the object pass index so we can make our masks
@@ -1318,35 +1322,38 @@ scene.update()
 #####################################################################################################################
 #####################################################################################################################
 
+# directory = "/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Input/"
+
+# for filename in os.listdir(directory):
+#     if filename.endswith(".jpg") or filename.endswith(".py"): 
+#         # print(os.path.join(directory, filename))
+#         continue
+#     else:
+#         continue
 
 delete_materials()
 
 
-#Set random position values
+# frame_number = filename.lstrip('frame')
+# frame_number = frame_number.rstrip('.jpg')
+# frame_number = int(frame_number)
 
-# sign_rotation
-# sign_position
-
-
-
-
-frame_number = 11970
+frame_number = 3150
 
 background_img = load_img(frame_number)
 
 output_data['img_name'] = 'frame' + str(frame_number) + '.jpg'
 
-
 img_number = frame_number #get image number from end of string
 
 
-# with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/VIRB0045-8.json')) as json_data:
-#     data = json.load(json_data)
-#     for x in data:
-#         if x['frame_number'] == img_number:
-#             frame_data = x
-#             break
-#     print(frame_data['frame_number'])
+with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/VIRB0045-8.json')) as json_data:
+    data = json.load(json_data)
+    for x in data:
+        if x['frame_number'] == img_number:
+            frame_data = x
+            break
+    print(frame_data['frame_number'])
 
 
 
@@ -1579,11 +1586,14 @@ bpy.ops.object.parent_set(type='OBJECT', keep_transform=True)
 bpy.context.object.name = "Aspect"
 obj = bpy.data.objects.get('Aspect')
 
+
 # Move sign to required position
 obj.location = sign_position
 obj.rotation_euler.x = sign_rotation[0]
 obj.rotation_euler.y = sign_rotation[1]
 obj.rotation_euler.z = sign_rotation[2] # 8 deg
+
+obj.pass_index = 1
 
 
 #####################################################################################################################
@@ -1605,41 +1615,41 @@ angle_values = (1.424895, -0.002425, 3.103351)
 camera_add(location_values, angle_values, 'PERSP')
 
 
-def frame_stuff():
+# def frame_stuff():
 
-    config = {
-        # 11970
-        'utc_timestamp' : 1489093023,
-        'frame_position_lat' : -33.423610315,
-        'frame_position_long' : 149.585649565,
-        'frame_heading' : 247.275
+#     config = {
+#         # 11970
+#         'utc_timestamp' : 1489093023,
+#         'frame_position_lat' : -33.423610315,
+#         'frame_position_long' : 149.585649565,
+#         'frame_heading' : 247.275
 
-        # # 0
-        # 'utc_timestamp' : 1489092624,
-        # 'frame_position_lat' : -33.423566336,
-        # 'frame_position_long' : 149.623483399,
-        # 'frame_heading' : 285.755
-
-
-        # Test data
-        #'utc_timestamp' : 1489092624,
-        #'frame_position_lat' : -33.423566336,
-        #'frame_position_long' : 149.623483399,
-        #'frame_heading' : 285.755
-    }
-    return config
+#         # # 0
+#         # 'utc_timestamp' : 1489092624,
+#         # 'frame_position_lat' : -33.423566336,
+#         # 'frame_position_long' : 149.623483399,
+#         # 'frame_heading' : 285.755
 
 
-frame_data = frame_stuff()
+#         # Test data
+#         #'utc_timestamp' : 1489092624,
+#         #'frame_position_lat' : -33.423566336,
+#         #'frame_position_long' : 149.623483399,
+#         #'frame_heading' : 285.755
+#     }
+#     return config
+
+
+# frame_data = frame_stuff()
 
 zenith, azimuth = sunpos(frame_data['utc_timestamp'], 
-                        (frame_data['frame_position_lat'] / (math.pi / 180)), 
-                        (frame_data['frame_position_long'] / (math.pi / 180))
+                        (frame_data['frame_position_lat'] * (math.pi / 180)), 
+                        (frame_data['frame_position_long'] * (math.pi / 180))
                         )
 
 sun_rotation = sun_location(zenith, 
                             azimuth,
-                            frame_data['frame_heading']
+                            (frame_data['frame_heading'] * (math.pi / 180))
                             )
 
 lamp_add(object_number, 
@@ -1654,18 +1664,22 @@ nodes = scene.node_tree.nodes
 render_layers = nodes.new(type="CompositorNodeRLayers")
 background_layers = nodes.new(type="CompositorNodeImage")
 mix = nodes.new(type="CompositorNodeMixRGB")
+mask = nodes.new(type="CompositorNodeIDMask")
+mask.index = 1
+
 
 indexob_file = nodes.new('CompositorNodeOutputFile')
 image_file = nodes.new('CompositorNodeOutputFile')
 
-indexob_file.base_path = 'output'
-indexob_file.file_slots[0].path = 'stencil'
-image_file.base_path = 'output'
-image_file.file_slots[0].path = 'image'
+indexob_file.base_path = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-stn/'
+indexob_file.file_slots[0].path = 'stencil' + str(frame_number)
+image_file.base_path = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-img/'
+image_file.file_slots[0].path = 'image' + str(frame_number)
 
 background_layers.image = background_img
 
-scene.node_tree.links.new(render_layers.outputs['IndexOB'], indexob_file.inputs['Image'])
+scene.node_tree.links.new(render_layers.outputs['IndexOB'], mask.inputs[0])
+scene.node_tree.links.new(mask.outputs[0], indexob_file.inputs['Image'])
 scene.node_tree.links.new(render_layers.outputs['Image'], mix.inputs[2])
 scene.node_tree.links.new(background_layers.outputs['Image'], mix.inputs[1])
 scene.node_tree.links.new(render_layers.outputs['Alpha'], mix.inputs[0])
@@ -1682,10 +1696,17 @@ scene.node_tree.links.new(mix.outputs[0], composite.inputs[0])
 #####################################################################################################################
 
 
+#scene.update()
 
+# Render the image
+#bpy.context.scene.frame_set(fno)
+#bpy.ops.render.render(write_still=True)
 
-# with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-meta/',
-#                        'meta{:04d}.yaml'.format(fno)),
-#                        'w'
-#                        ) as md:
-#     md.write(yaml.dump(output_data, indent=4))
+output_data['frame_data'] = frame_data
+
+with open(os.path.join('/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-meta/',
+                       'meta{:04d}.yaml'.format(frame_number)),
+                       'w'
+                       ) as md:
+    md.write(yaml.dump(output_data, indent=4, default_flow_style=False))
+fno += 1
