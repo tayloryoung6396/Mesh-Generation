@@ -22,11 +22,11 @@ def configuration():
 
     config = {
         'background': {
-            'style' : 'reccir', # rectangle, circle, reccir, cirtri, square, recround
-            'orientation' : 'vertical', # vertical, horizontal
-            'border_size' : 0.1, # Range []
+            'style' : ('rectangle', 'circle', 'reccir', 'cirtri', 'square', 'recround'),
+            'orientation' : ('vertical', 'horizontal'),
+            'border_size' : (0.1, 0.1), #0.1, # Range []
             'thickness' : 0.01,
-            'bevel_radius' : 0.1, # Range []
+            'bevel_radius' : (0.1, 0.3), #0.1, # Range []
             'post' : {
                 'roughness_p' : 0.3,
                 'reflection_p' : 0.5,
@@ -35,28 +35,24 @@ def configuration():
                 'noise_p' : (10, 1, 0)
             },
             'sign' : {
-                'roughness_s' = 0.05,
-                'reflection_s' = 0.6,
-                'diffuse_s' = (0, 0, 0),
-                'glossy_s' = (0.009, 0.010, 0.012),
-                'noise_s' = (2, 1, 6)
+                'roughness_s' : 0.05,
+                'reflection_s' : 0.6,
+                'diffuse_s' : (0, 0, 0),
+                'glossy_s' : (0.009, 0.010, 0.012),
+                'noise_s' : (2, 1, 6)
             }
         },
         'lights' : {
-            'number_total' : 3, # Range [1, 5]
-            'light' : ([[0, 1, 0, 'off'],
-                        [1, 0, 0, 'off'],
-                        [0, 1, 0, 'blank'],
-                        [0, 1, 0, 'blank'],
-                        [1, 1, 1, 'off'],
-                        [1, 0, 0, 'off']]),
-            'light_can_depth' : 0.069, # Range [0.03, 0.069]
-            'light_spacing' : 0.015, # Range []
-            'light_radius' : 0.1, # Range []
-            'light_wall_thickness' : 0.01 # Range []
+            'number_total' : (1, 5), #3, # Range [1, 5]
+            'light' : ('red', 'green'),
+            'light_status' : ('on', 'off', 'blank'),
+            'light_can_depth' : (0.03, 0.069), #0.069, # Range [0.03, 0.069]
+            'light_spacing' : (0.01, 0.3), #0.015, # Range []
+            'light_radius' : (0.1, 0.2), #0.1, # Range []
+            'light_wall_thickness' : (0.005, 0.01) #0.01 # Range []
         },
         'sign_parameters' : {
-            'height' : 1.6, # Range [0.5, 2]
+            'height' : (1.0, 2.0), #1.6, # Range [0.5, 2]
             'radius' : 0.05,
             'position' : {
                 'x' : 0, # Range [] left right maybe should be related and follow some relationship / array to account for other lines
@@ -84,131 +80,13 @@ def configuration():
 config_dir = configuration()
 
 
-
-sign_values = np.array([[config_dir['background']['colour']['diffuse'][0], 
-                         config_dir['background']['colour']['diffuse'][1], 
-                         config_dir['background']['colour']['diffuse'][2], 
-                         1],
-                        [config_dir['background']['colour']['reflection1'][0], 
-                         config_dir['background']['colour']['reflection1'][1], 
-                         config_dir['background']['colour']['reflection1'][2], 
-                         1],
-                        [config_dir['background']['colour']['reflection2'][0], 
-                         config_dir['background']['colour']['reflection2'][1], 
-                         config_dir['background']['colour']['reflection2'][2], 
-                         1],
-                        [config_dir['background']['colour']['glossy'][0], 
-                         config_dir['background']['colour']['glossy'][1], 
-                         config_dir['background']['colour']['glossy'][2], 
-                         1]
-                       ])
-
-style =          config_dir['background']['style']
-orientation =    config_dir['background']['orientation']
-border_size =    config_dir['background']['border_size']
-thickness =      config_dir['background']['thickness']
-bevel_radius =   config_dir['background']['bevel_radius'] # Only used for recround (top radius)
-
-# R, G, B, A
-light_values = np.array([[config_dir['lights']['light'][0][0], 
-                          config_dir['lights']['light'][0][1], 
-                          config_dir['lights']['light'][0][2], 
-                          1],
-                         [config_dir['lights']['light'][1][0], 
-                          config_dir['lights']['light'][1][1], 
-                          config_dir['lights']['light'][1][2], 
-                          1],
-                         [config_dir['lights']['light'][2][0], 
-                          config_dir['lights']['light'][2][1], 
-                          config_dir['lights']['light'][2][2], 
-                          1],
-                         [config_dir['lights']['light'][3][0], 
-                          config_dir['lights']['light'][3][1], 
-                          config_dir['lights']['light'][3][2], 
-                          1],
-                         [config_dir['lights']['light'][4][0], 
-                          config_dir['lights']['light'][4][1], 
-                          config_dir['lights']['light'][4][2], 
-                          1]
-                        ])
-
-light_can_depth =       config_dir['lights']['light_can_depth']
-light_spacing =         config_dir['lights']['light_spacing']
-light_radius =          config_dir['lights']['light_radius']
-light_wall_thickness =  config_dir['lights']['light_wall_thickness']
-
-sign_height =   config_dir['sign_parameters']['height']
-post_radius =   config_dir['sign_parameters']['radius']
-
-sign_position = np.array([config_dir['sign_parameters']['position']['x'],
-                         config_dir['sign_parameters']['position']['y'],
-                         config_dir['sign_parameters']['position']['z']])
-
-sign_rotation = np.array([config_dir['sign_parameters']['rotation']['x'],
-                         config_dir['sign_parameters']['rotation']['y'],
-                         config_dir['sign_parameters']['rotation']['z']])
-
-# Set maximum number of lights for some designs
-if style == 'circle':
-    number_total = config_dir['lights']['number_total']
-    if number_total > 3:
-        number_total = 3
-
-elif style == 'cirtri':
-    number_total = config_dir['lights']['number_total']
-    number_total = 3
-
-elif style == 'square':
-    number_total = config_dir['lights']['number_total']
-    number_total = 5
-
-else:
-    number_total = config_dir['lights']['number_total']
-
-draw_background = {
-    'rectangle' : draw_background_rec,
-    'reccir' : draw_background_reccir,
-    'recround' : draw_background_recround,
-    'circle' : draw_background_cir,
-    'cirtri' : draw_background_cirtri,
-    'square' : draw_background_squ
-}
-
-object_number = 0    #Ranom Variable (Number of objects)
-object_name = [0]
-fno = 1
-
-output_data = {
-        'img_name' : '',
-        'background': {
-            'style' : style,
-            'orientation' : orientation,
-            'border_size' : border_size,
-            'thickness' : thickness,
-            'bevel_radius' : bevel_radius,
-        },
-        'lights' : {
-            'number_total' : number_total,
-            'light' : light_values.tolist(),
-            'light_depth' : light_can_depth,
-            'light_spacing' : light_spacing,
-            'light_radius' : light_radius,
-            'light_wall_thickness' : light_wall_thickness
-        },
-        'sign_parameters' : {
-            'height_total' : sign_height,
-            'radius' : post_radius,
-            'sign_height' : '',
-            'sign_width' : '',
-            'position' : sign_position.tolist(),
-            'rotation' : sign_rotation.tolist(),
-        },
-        'frame_data' : {
-        }
-    }
-
 # Remove previous materials (for testing)
 def delete_materials():
+    for items in bpy.data.materials:
+        bpy.data.materials.remove(items)
+
+        # Remove previous materials (for testing)
+def delete_compositor():
     for items in bpy.data.materials:
         bpy.data.materials.remove(items)
 
@@ -224,7 +102,8 @@ def draw_background_rec(light_radius,
                         no_lights,
                         object_number,
                         light_spacing,
-                        orientation):
+                        orientation,
+                        bevel_radius):
 
     # Calculate width and height of sign background
     width = 2 * light_radius + 2 * border_size
@@ -235,11 +114,11 @@ def draw_background_rec(light_radius,
         temp = width
         width = height
         height = temp
-        print('Orientation Horizontal')
+        #print('Orientation Horizontal')
         location_values = (vertical_origin, -background_thickness, 0)
 
     else:
-        print('Orientation Vertical')
+        #print('Orientation Vertical')
         location_values = (0, -background_thickness, vertical_origin)    
 
     # Create sign background
@@ -273,7 +152,8 @@ def draw_background_cir(light_radius,
                         no_lights,
                         object_number,
                         light_spacing,
-                        orientation):
+                        orientation,
+                        bevel_radius):
 
     # Calculate width and height of sign background
     height = (no_lights * light_radius * 2) + ((no_lights - 1) * light_spacing) + border_size + border_size 
@@ -281,11 +161,11 @@ def draw_background_cir(light_radius,
     vertical_origin = (height / 2) - (border_size + light_radius)
 
     if orientation == 'horizontal':
-        print('Orientation Horizontal')
+        # print('Orientation Horizontal')
         location_values = (vertical_origin, -background_thickness, 0)
 
     else:
-        print('Orientation Vertical')
+        # print('Orientation Vertical')
         location_values = (0, -background_thickness, vertical_origin)
 
     if orientation == 'horizontal':
@@ -323,7 +203,8 @@ def draw_background_cirtri(light_radius,
                            no_lights,
                            object_number,
                            light_spacing,
-                           orientation):
+                           orientation,
+                           bevel_radius):
 
     # Calculate width and height of sign background
     height = ((light_radius + light_spacing / 2) / (math.sqrt(3) / 2)) + light_radius + border_size
@@ -360,7 +241,8 @@ def draw_background_reccir(light_radius,
                            no_lights,
                            object_number,
                            light_spacing,
-                           orientation):
+                           orientation,
+                           bevel_radius):
 
     # Calculate width and height of sign background and height of circular top
     width = 2 * light_radius + 2 * border_size
@@ -437,11 +319,11 @@ def draw_background_recround(light_radius,
         temp = width
         width = height
         height = temp
-        print('Orientation Horizontal')
+        # print('Orientation Horizontal')
         location_values = (vertical_origin, -background_thickness, 0)
 
     else:
-        print('Orientation Vertical')
+        # print('Orientation Vertical')
         location_values = (0, -background_thickness, vertical_origin)
 
     # Create sign background
@@ -513,7 +395,8 @@ def draw_background_squ(light_radius,
                         no_lights,
                         object_number,
                         light_spacing,
-                        orientation):
+                        orientation,
+                        bevel_radius):
 
     # Calculate width and height of sign background
     width = (math.sqrt((2 * light_radius + light_spacing) / 2)) + (2 * border_size) + (2 * light_radius)
@@ -779,8 +662,9 @@ def move_can(style,
 
         center_x = 0
         center_y = 0
-
-        if x_lights == 1:
+        if x_lights == 0:
+            center_x = center_x
+        elif x_lights == 1:
 
             center_x = -horizontal_offset
             center_y = -vertical_offset
@@ -801,7 +685,7 @@ def move_can(style,
             center_y = vertical_offset
 
         else:
-            print('Too many lights')
+            print('Too many lights 1, ' + str(x_lights))
 
         obj.location=(center_x, obj.location[1], center_y)
 
@@ -810,7 +694,9 @@ def move_can(style,
         center_x = 0 
         center_y = -(light_radius + light_spacing / 2) / (math.sqrt(3) / 2)
         
-        if x_lights == 1:
+        if x_lights == 0:
+            center_x = center_x
+        elif x_lights == 1:
 
             center_y = (1 / math.sqrt(3)) * (light_radius + light_spacing / 2)
             center_x = (light_radius + light_spacing / 2)
@@ -821,7 +707,7 @@ def move_can(style,
             center_x = -(light_radius + light_spacing / 2)
 
         else:
-            print('Too many lights')
+            print('Too many lights 2, '  + str(x_lights))
 
         obj.location=(center_x, obj.location[1], center_y)
 
@@ -892,9 +778,9 @@ def light_glass_material(light_values,
                      1)
 
     mat = bpy.data.materials.get('light_glass_material_' 
-                                + str(light_values[i][0]) + '_' 
-                                + str(light_values[i][1]) + '_'
-                                + str(light_values[i][2]))
+                                + str(int(light_values[i][0])) + '_' 
+                                + str(int(light_values[i][1])) + '_'
+                                + str(int(light_values[i][2])))
 
     # TODO solve double creation of nodes
 
@@ -902,9 +788,9 @@ def light_glass_material(light_values,
     if mat is None:
         # create material and assign
         mat = bpy.data.materials.new('light_glass_material_'
-                                    + str(light_values[i][0]) + '_' 
-                                    + str(light_values[i][1]) + '_'
-                                    + str(light_values[i][2]))
+                                    + str(int(light_values[i][0])) + '_' 
+                                    + str(int(light_values[i][1])) + '_'
+                                    + str(int(light_values[i][2])))
     else:
         return
 
@@ -970,17 +856,17 @@ def light_glass_off_material(light_values, i):
                          1)
 
     mat = bpy.data.materials.get('light_glass_off_material_' 
-                                 + str(light_values[i][0]) + '_' 
-                                 + str(light_values[i][1]) + '_'
-                                 + str(light_values[i][2]))
+                                 + str(int(light_values[i][0])) + '_' 
+                                 + str(int(light_values[i][1])) + '_'
+                                 + str(int(light_values[i][2])))
 
     #if it doesnt exist, create it.
     if mat is None:
         # create material and assign
         mat = bpy.data.materials.new('light_glass_off_material_' 
-                                     + str(light_values[i][0]) + '_' 
-                                     + str(light_values[i][1]) + '_'
-                                     + str(light_values[i][2]))
+                                     + str(int(light_values[i][0])) + '_' 
+                                     + str(int(light_values[i][1])) + '_'
+                                     + str(int(light_values[i][2])))
     else:
         return
 
@@ -1114,28 +1000,25 @@ def PBR_Dielectric(roughness,
 
     node_tree.links.new(output.inputs[0], mix_1.outputs[0])
 
-def compositor(frame_number,
-               background_img):
+def compositor_add():
     
     # Link up our output layers to file output nodes
     nodes = scene.node_tree.nodes
 
     render_layers = nodes.new(type="CompositorNodeRLayers")
+    render_layers.name = render_layers.label = 'render_layers'
     background_layers = nodes.new(type="CompositorNodeImage")
+    background_layers.name = background_layers.label = 'background_layers'
     mix = nodes.new(type="CompositorNodeMixRGB")
+    mix.name = mix.label = 'mix'
     mask = nodes.new(type="CompositorNodeIDMask")
+    mask.name = mask.label = 'mask'
     mask.index = 1
 
-
     indexob_file = nodes.new('CompositorNodeOutputFile')
+    indexob_file.name = indexob_file.label = 'indexob_file'
     image_file = nodes.new('CompositorNodeOutputFile')
-
-    indexob_file.base_path = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-stn/'
-    indexob_file.file_slots[0].path = 'stencil' + str(frame_number)
-    image_file.base_path = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-img/'
-    image_file.file_slots[0].path = 'image' + str(frame_number)
-
-    background_layers.image = background_img
+    image_file.name = image_file.label = 'image_file'
 
     scene.node_tree.links.new(render_layers.outputs['IndexOB'], mask.inputs[0])
     scene.node_tree.links.new(mask.outputs[0], indexob_file.inputs['Image'])
@@ -1146,6 +1029,25 @@ def compositor(frame_number,
 
     composite = nodes.new(type='CompositorNodeComposite')
     scene.node_tree.links.new(mix.outputs[0], composite.inputs[0])
+
+
+def compositor_set(frame_number,
+                   background_img):
+    
+    # Link up our output layers to file output nodes
+    nodes = scene.node_tree.nodes
+
+    render_layers = nodes['render_layers']
+    background_layers = nodes['background_layers']
+    indexob_file = nodes['indexob_file']
+    image_file = nodes['image_file']
+
+    indexob_file.base_path = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-stn/'
+    indexob_file.file_slots[0].path = 'stencil' + str(frame_number)
+    image_file.base_path = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-img/'
+    image_file.file_slots[0].path = 'image' + str(frame_number)
+
+    background_layers.image = background_img
 
 #####################################################################################################################
 #####################################################################################################################
@@ -1270,8 +1172,8 @@ def sunpos(timestamp, latitude, longitude):
     parallax = (earth_mean_radius / astronomical_unit) * math.sin(zenith)
     zenith += parallax
 
-    print('zenith sunpos rads: {}'.format(zenith))
-    print('azimuth sunpos rads: {}'.format(azimuth))
+    # print('zenith sunpos rads: {}'.format(zenith))
+    # print('azimuth sunpos rads: {}'.format(azimuth))
     
     return (zenith, azimuth)
 
@@ -1293,12 +1195,21 @@ def sun_location(zenith, azimuth, heading):
 #####################################################################################################################
 #####################################################################################################################
 
+
+draw_background = {
+    'rectangle' : draw_background_rec,
+    'reccir' : draw_background_reccir,
+    'recround' : draw_background_recround,
+    'circle' : draw_background_cir,
+    'cirtri' : draw_background_cirtri,
+    'square' : draw_background_squ
+}
+
+
 # Change directories so we are where this file is
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
-# Delete old objects 
-for object in bpy.data.objects:
-    bpy.data.objects.remove(object)
+
 
 # # Change to the cycles renderer and setup some options
 bpy.context.scene.render.engine = 'CYCLES'
@@ -1319,6 +1230,10 @@ scene = bpy.context.scene
 
 scene.update()
 
+#delete_compositor()
+
+compositor_add()
+
 
 
 #####################################################################################################################
@@ -1329,282 +1244,481 @@ scene.update()
 
 # Used for generating multiple images
 
-# directory = "/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Input/"
+directory = "/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Input/"
 
-# for filename in os.listdir(directory):
-#     if filename.endswith(".jpg") or filename.endswith(".py"): 
-#         print(os.path.join(directory, filename))
-#         continue
-#     else:
-#         continue
+files = 0
 
+for filename in os.listdir(directory):
+    if filename.endswith(".jpg"):
+        files += 1
 
-delete_materials()
+print('Files to render: {}' .format(files))
 
+files = 0
 
-# frame_number = filename.lstrip('frame')
-# frame_number = frame_number.rstrip('.jpg')
-# frame_number = int(frame_number)
-
-frame_number = 3150 # TODO temporary
-
-background_img = load_img(frame_number)
-
-output_data['img_name'] = 'frame' + str(frame_number) + '.jpg'
-
-img_number = frame_number #get image number from end of string
-
-# Read in meta data
-with open(os.path.join(Input_meta_file)) as json_data:
-    data = json.load(json_data)
-    for x in data:
-        if x['frame_number'] == img_number:
-            frame_data = x
-            break
-    print(frame_data['frame_number'])
+for filename in os.listdir(directory):
+    if filename.endswith(".jpg"): 
+        # print(os.path.join(directory, filename))
+        files += 1
+        print('Rendering file: {}' .format(files))
+    else:
+        continue
 
 
 
 
-# For each light, create the material required
-for i in range(0, light_values.shape[0]):
+    # TODO somehow split this into the respective functions/ a function itself
 
-    if config_dir['lights']['light'][i][3] == 'on':
-        light_glass_material(light_values,
-                             i,
-                             2, 
-                             1, 
-                             5, 
-                             1)
+    style =          random.choice(config_dir['background']['style'])
+    orientation =    random.choice(config_dir['background']['orientation'])
+    border_size =    (config_dir['background']['border_size'][1] - config_dir['background']['border_size'][0]) * np.random.random() + config_dir['background']['border_size'][0]
+                                    
+    thickness =      config_dir['background']['thickness']
+    bevel_radius =   (config_dir['background']['bevel_radius'][1] - config_dir['background']['bevel_radius'][0]) * np.random.random() + config_dir['background']['bevel_radius'][0]
+                                    
+    number_total =   random.randint(config_dir['lights']['number_total'][0], config_dir['lights']['number_total'][1])
 
-    elif config_dir['lights']['light'][i][3] == 'off':
-        light_glass_off_material(light_values, i)
+    light_choice = np.zeros((5,3))
 
-# Create the sign material
-PBR_Dielectric(config_dir['Background']['Sign']roughness_s, 
-               config_dir['Background']['Sign']reflection_s,
-               config_dir['Background']['Sign']diffuse_s, 
-               config_dir['Background']['Sign']glossy_s, 
-               config_dir['Background']['Sign']noise_s, 
-               'PBR_Dielectric'
-               )
+    for i in range(0, 5):
+        if random.choice(config_dir['lights']['light']) == 'red':
+            light_choice[i] = (1, 0, 0)
 
-# Create the post material
-PBR_Dielectric(config_dir['Background']['Post']roughness_p, 
-               config_dir['Background']['Post']reflection_p, 
-               config_dir['Background']['Post']diffuse_p, 
-               config_dir['Background']['Post']glossy_p, 
-               config_dir['Background']['Post']noise_p,
-               'PBR_Dielectric_post'
-               )
+        else:
+            light_choice[i] = (0, 1, 0)
+
+    # R, G, B, A
+    light_values = np.array([[light_choice[0][0], 
+                              light_choice[0][1], 
+                              light_choice[0][2], 
+                              1],
+                             [light_choice[1][0], 
+                              light_choice[1][1], 
+                              light_choice[1][2], 
+                              1],
+                             [light_choice[2][0], 
+                              light_choice[2][1], 
+                              light_choice[2][2], 
+                              1],
+                             [light_choice[3][0], 
+                              light_choice[3][1], 
+                              light_choice[3][2], 
+                              1],
+                             [light_choice[4][0], 
+                              light_choice[4][1], 
+                              light_choice[4][2], 
+                              1]
+                            ])
 
 
-objects = bpy.data.objects
+    light_status = np.array([random.choice(config_dir['lights']['light_status']),
+                             random.choice(config_dir['lights']['light_status']),
+                             random.choice(config_dir['lights']['light_status']),
+                             random.choice(config_dir['lights']['light_status']),
+                             random.choice(config_dir['lights']['light_status'])
+                            ])
 
-# For each light create it and move to required position
-for x_light in range (0, (number_total)):
-    light_status = config_dir['lights']['light'][x_light][3]
 
-    if light_status == 'blank':
-        print(light_status + str(x_light))
+    # print(light_status[0] + '  ' + str(int(light_values[0][0])) + '_' + str(int(light_values[0][1])) + '_' + str(int(light_values[0][2])))
+    # print(light_status[1] + '  ' + str(int(light_values[1][0])) + '_' + str(int(light_values[1][1])) + '_' + str(int(light_values[1][2])))
+    # print(light_status[2] + '  ' + str(int(light_values[2][0])) + '_' + str(int(light_values[2][1])) + '_' + str(int(light_values[2][2])))
+    # print(light_status[3] + '  ' + str(int(light_values[3][0])) + '_' + str(int(light_values[3][1])) + '_' + str(int(light_values[3][2])))  
+    # print(light_status[4] + '  ' + str(int(light_values[4][0])) + '_' + str(int(light_values[4][1])) + '_' + str(int(light_values[4][2])))  
 
-        blank_obj = draw_blank(object_number,
-                               light_radius,
-                               light_spacing,
-                               light_wall_thickness,
-                               light_can_depth
-                               )
 
-        blank_obj.name = 'blank' + str(x_light)
-        
-        mat = bpy.data.materials['PBR_Dielectric']
-        blank_obj.data.materials.append(mat)
+    light_can_depth =       (config_dir['lights']['light_can_depth'][1] - config_dir['lights']['light_can_depth'][0]) * np.random.random() + config_dir['lights']['light_can_depth'][0]
 
-        blank_obj = move_can(style,
-                             light_radius,
-                             light_spacing,
-                             number_total,
-                             orientation,
-                             x_light,
-                             light_can_depth,
-                             light_wall_thickness,
-                             blank_obj,
-                             light_status)
+
+    light_spacing =         (config_dir['lights']['light_spacing'][1] - config_dir['lights']['light_spacing'][0]) * np.random.random() + config_dir['lights']['light_spacing'][0]
+
+
+    light_radius =          (config_dir['lights']['light_radius'][1] - config_dir['lights']['light_radius'][0]) * np.random.random() + config_dir['lights']['light_radius'][0]
+
+
+    light_wall_thickness =  (config_dir['lights']['light_wall_thickness'][1] - config_dir['lights']['light_wall_thickness'][0]) * np.random.random() + config_dir['lights']['light_wall_thickness'][0]
+
+
+    sign_height =   np.random.random()
+    (config_dir['sign_parameters']['height'][0],
+                                    config_dir['sign_parameters']['height'][1])
+
+
+    post_radius =   config_dir['sign_parameters']['radius']
+
+    sign_position = np.array([config_dir['sign_parameters']['position']['x'],
+                             config_dir['sign_parameters']['position']['y'],
+                             config_dir['sign_parameters']['position']['z']])
+
+    sign_rotation = np.array([config_dir['sign_parameters']['rotation']['x'],
+                             config_dir['sign_parameters']['rotation']['y'],
+                             config_dir['sign_parameters']['rotation']['z']])
+
+    # Set maximum number of lights for some designs
+    if style == 'circle':
+        if number_total > 3:
+            number_total = 3
+
+    elif style == 'cirtri':
+        number_total = 3
+
+    elif style == 'square':
+        number_total = 5
 
     else:
+        number_total = number_total
 
-        bpy.ops.object.select_all(action='DESELECT')
-
-        print(light_status + str(x_light))
-        print(str(light_values[x_light][0]) + '_' 
-            + str(light_values[x_light][1]) + '_' 
-            + str(light_values[x_light][2]))        
-        
-        can_obj = draw_can(object_number,
-                           light_radius,
-                           light_spacing,
-                           light_wall_thickness,
-                           light_can_depth
-                           )
-
-        can_obj.name = 'can' + str(x_light)
-        
-        mat = bpy.data.materials['PBR_Dielectric']
-        can_obj.data.materials.append(mat)
+    print('Number Total: {}' .format(number_total))
 
 
-        can_obj = move_can(style,
-                           light_radius,
-                           light_spacing,
-                           number_total,
-                           orientation,
-                           x_light,
-                           light_can_depth,
-                           light_wall_thickness,
-                           can_obj,
-                           0)
+    object_number = 0    #Ranom Variable (Number of objects)
+    object_name = [0]
+    fno = 1
 
-        light_obj = draw_light(object_number,
+    output_data = {
+            'img_name' : '',
+            'background': {
+                'style' : style,
+                'orientation' : orientation,
+                'border_size' : border_size,
+                'thickness' : thickness,
+                'bevel_radius' : bevel_radius,
+            },
+            'lights' : {
+                'number_total' : number_total,
+                'light' : light_values.tolist(),
+                'light_depth' : light_can_depth,
+                'light_spacing' : light_spacing,
+                'light_radius' : light_radius,
+                'light_wall_thickness' : light_wall_thickness
+            },
+            'sign_parameters' : {
+                'height_total' : sign_height,
+                'radius' : post_radius,
+                'sign_height' : '',
+                'sign_width' : '',
+                'position' : sign_position.tolist(),
+                'rotation' : sign_rotation.tolist(),
+            },
+            'frame_data' : {
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+    # Delete old objects 
+    for object in bpy.data.objects:
+        bpy.data.objects.remove(object)
+    
+    delete_materials()
+
+    # TODO delete objects at the start
+
+
+    frame_number = filename.lstrip('frame')
+    frame_number = frame_number.rstrip('.jpg')
+    frame_number = int(frame_number)
+
+    #frame_number = 3150 # TODO temporary
+
+    background_img = load_img(frame_number)
+
+    output_data['img_name'] = 'frame' + str(frame_number) + '.jpg'
+
+    img_number = frame_number #get image number from end of string
+
+    # Read in meta data
+    with open(os.path.join(Input_meta_file)) as json_data:
+        data = json.load(json_data)
+        for x in data:
+            if x['frame_number'] == img_number:
+                frame_data = x
+                break
+        # print(frame_data['frame_number'])
+
+
+
+
+    # For each light, create the material required
+    for i in range(0, number_total):
+
+        if light_status[i] == 'on':
+            light_glass_material(light_values,
+                                 i,
+                                 2, 
+                                 1, 
+                                 5, 
+                                 1)
+
+        elif light_status[i] == 'off':
+            light_glass_off_material(light_values, i)
+
+    # Create the sign material
+    PBR_Dielectric(config_dir['background']['sign']['roughness_s'], 
+                   config_dir['background']['sign']['reflection_s'],
+                   config_dir['background']['sign']['diffuse_s'], 
+                   config_dir['background']['sign']['glossy_s'], 
+                   config_dir['background']['sign']['noise_s'], 
+                   'PBR_Dielectric'
+                   )
+
+    # Create the post material
+    PBR_Dielectric(config_dir['background']['post']['roughness_p'], 
+                   config_dir['background']['post']['reflection_p'], 
+                   config_dir['background']['post']['diffuse_p'], 
+                   config_dir['background']['post']['glossy_p'], 
+                   config_dir['background']['post']['noise_p'],
+                   'PBR_Dielectric_post'
+                   )
+
+
+    objects = bpy.data.objects
+
+    # For each light create it and move to required position
+    for x_light in range (0, (number_total - 1)):
+        light_status_var = light_status[x_light]
+
+        if light_status_var == 'blank':
+            #print(light_status + str(x_light))
+
+            blank_obj = draw_blank(object_number,
+                                   light_radius,
+                                   light_spacing,
+                                   light_wall_thickness,
+                                   light_can_depth
+                                   )
+
+            blank_obj.name = 'blank' + str(x_light)
+            
+            mat = bpy.data.materials['PBR_Dielectric']
+            blank_obj.data.materials.append(mat)
+
+            blank_obj = move_can(style,
+                                 light_radius,
+                                 light_spacing,
+                                 number_total,
+                                 orientation,
+                                 x_light,
+                                 light_can_depth,
+                                 light_wall_thickness,
+                                 blank_obj,
+                                 light_status_var)
+
+        else:
+
+            bpy.ops.object.select_all(action='DESELECT')
+
+            # print(light_status + str(x_light))
+            # print(str(light_values[x_light][0]) + '_' 
+                # + str(light_values[x_light][1]) + '_' 
+                # + str(light_values[x_light][2]))        
+            
+            can_obj = draw_can(object_number,
                                light_radius,
                                light_spacing,
                                light_wall_thickness,
                                light_can_depth
                                )
 
-        light_obj.name = 'light' + str(x_light)
-
-        if light_status == 'on':
-            mat = bpy.data.materials['light_glass_material_' 
-                                     + str(light_values[x_light][0]) + '_' 
-                                     + str(light_values[x_light][1]) + '_' 
-                                     + str(light_values[x_light][2])]                    
-        else:
-            mat = bpy.data.materials['light_glass_off_material_' 
-                                     + str(light_values[x_light][0]) + '_' 
-                                     + str(light_values[x_light][1]) + '_' 
-                                     + str(light_values[x_light][2])]
-
-        light_obj.data.materials.append(mat)
-
-        light_obj = move_can(style,
-                             light_radius,
-                             light_spacing,
-                             number_total,
-                             orientation,
-                             x_light,
-                             light_can_depth,
-                             light_wall_thickness,
-                             light_obj,
-                             light_status)
+            can_obj.name = 'can' + str(x_light)
+            
+            mat = bpy.data.materials['PBR_Dielectric']
+            can_obj.data.materials.append(mat)
 
 
-# Make background sign
-background_obj = draw_background[style](light_radius, 
-                                        thickness,
-                                        border_size,
-                                        number_total,
-                                        object_number,
-                                        light_spacing,
-                                        orientation
-                                        )
+            can_obj = move_can(style,
+                               light_radius,
+                               light_spacing,
+                               number_total,
+                               orientation,
+                               x_light,
+                               light_can_depth,
+                               light_wall_thickness,
+                               can_obj,
+                               0)
 
-# Make post
-post_obj = draw_post(object_number,
-                     number_total,
-                     light_radius,
-                     border_size,
-                     light_spacing)
+            light_obj = draw_light(object_number,
+                                   light_radius,
+                                   light_spacing,
+                                   light_wall_thickness,
+                                   light_can_depth
+                                   )
 
-mat = bpy.data.materials['PBR_Dielectric_post']
-post_obj.data.materials.append(mat)
+            light_obj.name = 'light' + str(x_light)
 
-# Combine all objects
-for x in objects:
-    bpy.data.objects[x.name].select = True
-bpy.ops.object.join()
+            if light_status_var == 'on':
+                mat = bpy.data.materials['light_glass_material_' 
+                                         + str(int(light_values[x_light][0])) + '_' 
+                                         + str(int(light_values[x_light][1])) + '_' 
+                                         + str(int(light_values[x_light][2]))]                    
+            else:
+                mat = bpy.data.materials['light_glass_off_material_' 
+                                         + str(int(light_values[x_light][0])) + '_' 
+                                         + str(int(light_values[x_light][1])) + '_' 
+                                         + str(int(light_values[x_light][2]))]
 
-# Group lights with sign
-s = 'Signal'
-for x in bpy.data.objects:
-    if s.find('Signal') != -1:
-       x.select =True
+            light_obj.data.materials.append(mat)
 
-for x in objects:
-    bpy.data.objects[x.name].select = True
-
-bpy.data.groups.new('Aspect')
-bpy.ops.object.parent_set(type='OBJECT', keep_transform=True)
-
-bpy.context.object.name = "Aspect"
-obj = bpy.data.objects.get('Aspect')
-
-
-# Move sign to required position
-obj.location = sign_position
-obj.rotation_euler.x = sign_rotation[0]
-obj.rotation_euler.y = sign_rotation[1]
-obj.rotation_euler.z = sign_rotation[2] # 8 deg
-
-# TODO fix stencil
-obj.pass_index = 1
+            light_obj = move_can(style,
+                                 light_radius,
+                                 light_spacing,
+                                 number_total,
+                                 orientation,
+                                 x_light,
+                                 light_can_depth,
+                                 light_wall_thickness,
+                                 light_obj,
+                                 light_status_var)
 
 
-#####################################################################################################################
-#####################################################################################################################
-#                                    SHADOW CATCHER    CAMERA    LAMPS    COMPOSITOR                                #
-#####################################################################################################################
-#####################################################################################################################
+    # Make background sign
+    background_obj = draw_background[style](light_radius, 
+                                            thickness,
+                                            border_size,
+                                            number_total,
+                                            object_number,
+                                            light_spacing,
+                                            orientation,
+                                            bevel_radius
+                                            )
 
 
-# Shadow catcher plane
-bpy.ops.mesh.primitive_plane_add(location=(0, 0, -3))
-bpy.context.object.scale=(5, 5, 1)
-bpy.context.object.cycles.is_shadow_catcher = True
+    # Make post
+    post_obj = draw_post(object_number,
+                         number_total,
+                         light_radius,
+                         border_size,
+                         light_spacing)
+
+    mat = bpy.data.materials['PBR_Dielectric_post']
+    post_obj.data.materials.append(mat)
+
+    # Combine all objects
+    for x in objects:
+        bpy.data.objects[x.name].select = True
+    bpy.ops.object.join()
+
+    # Group lights with sign
+    s = 'Signal'
+    for x in bpy.data.objects:
+        if s.find('Signal') != -1:
+           x.select =True
+
+    for x in objects:
+        bpy.data.objects[x.name].select = True
+
+    bpy.data.groups.new('Aspect')
+    bpy.ops.object.parent_set(type='OBJECT', keep_transform=True)
+
+    bpy.context.object.name = "Aspect"
+    obj = bpy.data.objects.get('Aspect')
 
 
-location_values = (0.94495, 14.53555, 0.79661)
-angle_values = (1.424895, -0.002425, 3.103351)
+    # Move sign to required position
+    obj.location = sign_position
+    obj.rotation_euler.x = sign_rotation[0]
+    obj.rotation_euler.y = sign_rotation[1]
+    obj.rotation_euler.z = sign_rotation[2] # 8 deg
 
-camera_add(location_values, angle_values, config_dir['camera_parameters'])
+    # TODO fix stencil
+    obj.pass_index = 1
 
 
-zenith, azimuth = sunpos(frame_data['utc_timestamp'], 
-                        (frame_data['frame_position_lat'] * (math.pi / 180)), 
-                        (frame_data['frame_position_long'] * (math.pi / 180))
-                        )
+    #####################################################################################################################
+    #####################################################################################################################
+    #                                    SHADOW CATCHER    CAMERA    LAMPS    COMPOSITOR                                #
+    #####################################################################################################################
+    #####################################################################################################################
 
-sun_rotation = sun_location(zenith, 
-                            azimuth,
-                            (frame_data['frame_heading'] * (math.pi / 180))
+
+    # Shadow catcher plane
+    bpy.ops.mesh.primitive_plane_add(location=(0, 0, -3))
+    bpy.context.object.scale=(5, 5, 1)
+    bpy.context.object.cycles.is_shadow_catcher = True
+
+
+    location_values = (0.94495, 14.53555, 0.79661)
+    angle_values = (1.424895, -0.002425, 3.103351)
+
+    camera_add(location_values, angle_values, config_dir['camera_parameters'])
+
+    bpy.context.scene.camera = bpy.data.objects["Camera"]
+
+    zenith, azimuth = sunpos(frame_data['utc_timestamp'], 
+                            (frame_data['frame_position_lat'] * (math.pi / 180)), 
+                            (frame_data['frame_position_long'] * (math.pi / 180))
                             )
 
-lamp_add(object_number, 
-         object_name, 
-         sun_rotation)
+    sun_rotation = sun_location(zenith, 
+                                azimuth,
+                                (frame_data['frame_heading'] * (math.pi / 180))
+                                )
+
+    lamp_add(object_number, 
+             object_name, 
+             sun_rotation)
+
+    compositor_set(frame_number,
+                   background_img)
+
+    #####################################################################################################################
+    #####################################################################################################################
+    #                                              INFORMATION SAVING    RENDER                                         #
+    #####################################################################################################################
+    #####################################################################################################################
+
+    # Render the image
+    bpy.context.scene.frame_set(fno)
+    bpy.ops.render.render(write_still=True)
+
+    output_data['frame_data'] = frame_data
+
+    with open(os.path.join(Output_meta_file,
+                           'meta{:04d}.yaml'.format(frame_number)),
+                           'w'
+                           ) as md:
+        md.write(yaml.dump(output_data, indent=4, default_flow_style=False))
+    fno += 1
+
+print('Finished Rendering :)')
 
 
-compositor(frame_number,
-           background_img)
 
-#####################################################################################################################
-#####################################################################################################################
-#                                              INFORMATION SAVING    RENDER                                         #
-#####################################################################################################################
-#####################################################################################################################
 
-# TODO Fix auto rendering
 
-#scene.update()
-
-# Render the image
-#bpy.context.scene.frame_set(fno)
-#bpy.ops.render.render(write_still=True)
-
-output_data['frame_data'] = frame_data
-
-with open(os.path.join(Output_meta_file,
-                       'meta{:04d}.yaml'.format(frame_number)),
-                       'w'
-                       ) as md:
-    md.write(yaml.dump(output_data, indent=4, default_flow_style=False))
-fno += 1
+# delete materials
+# delete compositor
+# delete objects
+# create compositor
+# create my 8 materials
+# for each frame
+    # read json file
+    # decide on number of posts
+    # for each post
+        # decide on number of aspects
+        # for each aspect
+            # decide on number of lights
+            # make background
+            # decide which light is on
+            # for each light
+                # create it
+                # apply material
+                # add lamp
+                # move it relative to background
+            # join aspect parts
+            # give each aspect a unique pass index
+            # add meta data to meta file
+        # group post and aspects
+        # move to position
+        # ungroup
+    # calculate sun location
+    # add sun
+    # add camera
+    # render
+    # save meta file
