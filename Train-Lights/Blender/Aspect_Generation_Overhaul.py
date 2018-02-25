@@ -13,8 +13,8 @@ Input_img_file   = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Input
 config_dir = {
     'materials' : {
         'aspect' : {
-            'red' : (1, 0, 0)
-            'yellow' : (1, 1, 0)
+            'red' : (1, 0, 0),
+            'yellow' : (1, 1, 0),
             'green' : (0, 1, 0)
         },
         'sign' : {
@@ -40,76 +40,76 @@ config_dir = {
             'light_can_depth' : (0.03),
             'light_spacing' : (0.01),
             'light_radius' : (0.1),
-            'light_wall_thickness' : (0.01)
-            'radius' : 0.05
-            'z_rotation_min' : -10
-            'z_rotation_max' : 10
-            'min_aspect_height' : 1.0
-            'post_height_min' : 1.5
+            'light_wall_thickness' : (0.01),
+            'post_radius' : 0.05,
+            'z_rotation_min' : -10,
+            'z_rotation_max' : 10,
+            'min_aspect_height' : 1.0,
+            'post_height_min' : 1.5,
             'post_height_max' :2.5
-        }
+        },
         'style_options' : {
             'rectangle' :{
-                'lights_min' :
-                'lights_max' :
-                '1' : {('red')}
-                '2' : {('green', 'red')}
+                'lights_min' : 1,
+                'lights_max' : 3,
+                '1' : {('red')},
+                '2' : {('green', 'red')},
                 '3' : {('green', 'yellow', 'red')}
             },
             'reccir' : {
-                'lights_min' :
-                'lights_max' :
-                '1' : {('red')}
-                '2' : {('green', 'red')}
+                'lights_min' : 1,
+                'lights_max' : 3,
+                '1' : {('red')},
+                '2' : {('green', 'red')},
                 '3' : {('green', 'yellow', 'red')}
             }
         },
-        'post_height' : 
-        'posts_min' : 1
-        'posts_max' : 4
-        'aspects_min' : 1
-        'aspects_max' : 2
-        'number_posts' :
-        'post1' : {                             # These lines not needed, only for visual aid
-            'position' : {                      # These lines not needed, only for visual aid
-                'rl' :                          # These lines not needed, only for visual aid
-                'x' :                           # These lines not needed, only for visual aid
-                'y' :                           # These lines not needed, only for visual aid
-                'z' :                           # These lines not needed, only for visual aid
-            }
-            'number_aspects' :                  # These lines not needed, only for visual aid
-            'aspect1' : {                       # These lines not needed, only for visual aid
-                'style' :                       # These lines not needed, only for visual aid
-                'background' : {
-                    #Stuff
-                }
-                'number_lights' :               # These lines not needed, only for visual aid
-                'light1' : {                    # These lines not needed, only for visual aid
-                    'status' :                  # These lines not needed, only for visual aid
-                }                               # These lines not needed, only for visual aid
-                'position' : {                  # These lines not needed, only for visual aid
-                'x' :                           # These lines not needed, only for visual aid
-                'y' :                           # These lines not needed, only for visual aid
-                'z' :                           # These lines not needed, only for visual aid
-                }                               # These lines not needed, only for visual aid
-            }
-            'position' : {                      # These lines not needed, only for visual aid
-                'x' :                           # These lines not needed, only for visual aid
-                'y' :                           # These lines not needed, only for visual aid
-                'z' :                           # These lines not needed, only for visual aid
-            },
-            'rotation' : {                      # These lines not needed, only for visual aid
-                'x' :                           # These lines not needed, only for visual aid
-                'y' :                           # These lines not needed, only for visual aid
-                'z' :                           # These lines not needed, only for visual aid
-            }                                   # These lines not needed, only for visual aid
-        }                                       # These lines not needed, only for visual aid
-    }
+        # 'post_height' : 
+        'posts_min' : 1,
+        'posts_max' : 4,
+        'aspects_min' : 1,
+        'aspects_max' : 2,
+        # 'number_posts' :
+        # 'post1' : {                             # These lines not needed, only for visual aid
+        #     'position' : {                      # These lines not needed, only for visual aid
+        #         'rl' :                          # These lines not needed, only for visual aid
+        #         'x' :                           # These lines not needed, only for visual aid
+        #         'y' :                           # These lines not needed, only for visual aid
+        #         'z' :                           # These lines not needed, only for visual aid
+        #     }
+        #     'number_aspects' :                  # These lines not needed, only for visual aid
+        #     'aspect1' : {                       # These lines not needed, only for visual aid
+        #         'style' :                       # These lines not needed, only for visual aid
+        #         'background' : {
+        #             #Stuff
+        #         }
+        #         'number_lights' :               # These lines not needed, only for visual aid
+        #         'light1' : {                    # These lines not needed, only for visual aid
+        #             'status' :                  # These lines not needed, only for visual aid
+        #         }                               # These lines not needed, only for visual aid
+        #         'position' : {                  # These lines not needed, only for visual aid
+        #         'x' :                           # These lines not needed, only for visual aid
+        #         'y' :                           # These lines not needed, only for visual aid
+        #         'z' :                           # These lines not needed, only for visual aid
+        #         }                               # These lines not needed, only for visual aid
+        #     }
+        #     'position' : {                      # These lines not needed, only for visual aid
+        #         'x' :                           # These lines not needed, only for visual aid
+        #         'y' :                           # These lines not needed, only for visual aid
+        #         'z' :                           # These lines not needed, only for visual aid
+        #     },
+        #     'rotation' : {                      # These lines not needed, only for visual aid
+        #         'x' :                           # These lines not needed, only for visual aid
+        #         'y' :                           # These lines not needed, only for visual aid
+        #         'z' :                           # These lines not needed, only for visual aid
+        #     }                                   # These lines not needed, only for visual aid
+        # }                                       # These lines not needed, only for visual aid
+    },
     'colour' : {
-        'red' : (1, 0, 0)
-        'yellow' : (1, 1, 0)
+        'red' : (1, 0, 0),
+        'yellow' : (1, 1, 0),
         'green' : (0, 1, 0)
-    }
+    },
     'camera_parameters' : {
             'type' : 'PERSP', # PANO, PERSP
             'FOV' : 2.37365,
@@ -118,10 +118,19 @@ config_dir = {
     }
 }
 
+object_number = 0    #Ranom Variable (Number of objects)
+object_name = [0]
+fno = 1
+
 # Remove previous materials
 def delete_materials():
     for items in bpy.data.materials:
         bpy.data.materials.remove(items)
+
+# Delete old objects
+def delete_objects():
+    for object in bpy.data.objects:
+        bpy.data.objects.remove(object)
 
 # Remove previous compositor
 def delete_compositor():
@@ -725,12 +734,13 @@ def move_can(sign, post, aspect, obj, x_lights):
 
     return obj
 
-def draw_post(object_number, post, sign):
+def draw_post(object_number, sign):
 
     light_radius = sign['parameters']['light_radius']
     border_size = sign['parameters']['border_size']
     light_spacing = sign['parameters']['light_spacing']
     post_height = sign['parameters']['post_height']
+    post_radius = sign['parameters']['post_radius']
 
     objects = bpy.data.objects
 
@@ -1296,9 +1306,9 @@ def calculate_post_location(sign, post_number):
     # TODO figure out some eqn and how to flip it and move left and right
     # TODO figure out what changes when i menuvour a post
     # Include some half cut-off the screen (train going past it)
-    post['position']['x'] = # This is the post and aspectss combined, not only the post TODO
-    post['position']['y'] = # This is the post and aspectss combined, not only the post TODO
-    post['position']['z'] = # This is the post and aspectss combined, not only the post TODO
+    post['position']['x'] = 0 # This is the post and aspectss combined, not only the post TODO
+    post['position']['y'] = 0 # This is the post and aspectss combined, not only the post TODO
+    post['position']['z'] = 0 # This is the post and aspectss combined, not only the post TODO
     # TODO somewhere i need to acount for moving the sign up so the bottom of the post is at ground height (maybe?)
 
     # Vary angle along z axis by +- 5 degrees of zero position both for forwards and backwards
@@ -1369,8 +1379,6 @@ delete_compositor()
 
 delete_objects()
 
-compositor_add()
-
 # Make materials
 aspect_material = config_dir['materials']['aspect']
 for material in aspect_material:
@@ -1418,6 +1426,8 @@ scene = bpy.context.scene
 
 scene.update()
 
+compositor_add()
+
 # Calculate how many files we have
 files = 0
 for filename in os.listdir(Input_img_file):
@@ -1436,7 +1446,7 @@ for filename in os.listdir(Input_img_file):
     if filename.endswith(".jpg"):
         files += 1
         print('Rendering file: {}' .format(files))
-        output_data['img_name'] = filename
+        config_dir['img_name'] = filename
     else:
         continue
 
@@ -1449,7 +1459,7 @@ for filename in os.listdir(Input_img_file):
     with open(os.path.join(Input_meta_file)) as json_data:
         data = json.load(json_data)
         for x in data:
-            if x['frame_number'] == img_number:
+            if x['frame_number'] == frame_number:
                 frame_data = x
                 break
 
@@ -1459,14 +1469,60 @@ for filename in os.listdir(Input_img_file):
     sign['number_posts'] = random.randint(sign['posts_min'], sign['posts_max'])
 
     # Vary between 4 positions:
-        a = 1 # Far Left (Lower weighting)
-        b = 1 # Left
-        c = 1 # Right
-        d = 1 # Far Right (Lower weighting)
-    for post_number in sign['number_posts']:
+    a = 1 # Far Left (Lower weighting)
+    b = 1 # Left
+    c = 1 # Right
+    d = 1 # Far Right (Lower weighting)
+    # for post_number in range(0, sign['number_posts']):
+    #     # Make it less likely for a post to be positioned in the same rl twice in a frame
+    #     rl_choice = ['far_left', 'left', 'right', 'far_right']
+    #     rl_weight = [(10 / a), (40 / b), (40 / c), (10 / d)]
+
+    #     rl_total = rl_weight[0] + rl_weight[1] + rl_weight[2] + rl_weight[3]
+
+    #     rl_weight = [(10 / a) / rl_total, (40 / b) / rl_total, (40 / c) / rl_total, (10 / d) / rl_total]
+    #     #rl_position = random.choice(rl_choice)
+    #     #rl_position = random.choice(rl_choice, rl_weight)
+    #     rl_position = np.random.choice(rl_choice, 1, p=rl_weight)
+    #     if rl_position == 'far_left':
+    #         a += 1
+    #     if rl_position == 'left':
+    #         b += 1
+    #     if rl_position == 'right':
+    #         c += 1
+    #     if rl_position == 'far_right':
+    #         d += 1
+    #     sign['post' + str(post_number)]['position']['rl'] = rl_position
+
+    post_height_min = sign['parameters']['post_height_min']
+    post_height_max = sign['parameters']['post_height_max']
+    sign['parameters']['post_height'] = (post_height_max - post_height_min * np.random.random() + post_height_min) # Calculate outside of loop, so all are the same in  a frame
+
+    pass_count = 0 # used for pass index allowing each aspect to be an individual colour
+
+    for post_number in range(0, sign['number_posts']):
+        post_obj = draw_post(object_number, sign)
+        post_obj.name = 'post' + str(post_number)
+
+
+        sign['post' + str(post_number)] = 
+
+        post['number_aspects'] = random.randint(sign['aspects_min'], sign['aspects_max'])
+        
+
+
+
+
         # Make it less likely for a post to be positioned in the same rl twice in a frame
-        rl_choice = ['far_left'] * (10 / a) + ['left'] * (40 / b) + ['right'] * (40 / c) + ['far_right'] * (10 / d)
-        rl_position = random.choice(rl_choice)
+        rl_choice = ['far_left', 'left', 'right', 'far_right']
+        rl_weight = [(10 / a), (40 / b), (40 / c), (10 / d)]
+
+        rl_total = rl_weight[0] + rl_weight[1] + rl_weight[2] + rl_weight[3]
+
+        rl_weight = [(10 / a) / rl_total, (40 / b) / rl_total, (40 / c) / rl_total, (10 / d) / rl_total]
+        #rl_position = random.choice(rl_choice)
+        #rl_position = random.choice(rl_choice, rl_weight)
+        rl_position = np.random.choice(rl_choice, 1, p=rl_weight)
         if rl_position == 'far_left':
             a += 1
         if rl_position == 'left':
@@ -1477,18 +1533,8 @@ for filename in os.listdir(Input_img_file):
             d += 1
         sign['post' + str(post_number)]['position']['rl'] = rl_position
 
-    post_height_min = sign['parameters']['post_height_min']
-    post_height_max = sign['parameters']['post_height_max']
-    post_height = (post_height_max - post_height_min * np.random.random() + post_height_min) # Calculate outside of loop, so all are the same in  a frame
 
-    pass_count = 0 # used for pass index allowing each aspect to be an individual colour
 
-    for post_number in range(0, sign['number_posts']):
-        post = sign['post' + str(post_number)]
-
-        post['number_aspects'] = random.randint(sign['aspects_min'], sign['aspects_max'])
-        post_obj = draw_post(object_number, post, sign)
-        post_obj.name = 'post' + str(post_number)
 
         for aspect_number in range(0, post['number_aspects']):
             aspect = post['aspect' + str(aspect_number)]
@@ -1577,7 +1623,7 @@ for filename in os.listdir(Input_img_file):
             s = 'Signal'
             for x in bpy.data.objects:
                 if s.find('Signal') != -1:
-                x.select =True
+                    x.select =True
             
             bpy.data.groups.new('Aspect' + str(aspect_number))
             bpy.ops.object.parent_set(type='OBJECT', keep_transform=True)
