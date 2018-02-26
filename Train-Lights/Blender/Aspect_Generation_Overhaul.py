@@ -37,7 +37,7 @@ config_dir = {
             'border_size' : (0.1),
             'thickness' : 0.01,
             'bevel_radius' : (0.1),
-            'light_can_depth' : (0.03),
+            'light_depth' : (0.03),
             'light_spacing' : (0.01),
             'light_radius' : (0.1),
             'light_wall_thickness' : (0.01),
@@ -48,20 +48,21 @@ config_dir = {
             'post_height_min' : 1.5,
             'post_height_max' :2.5
         },
-        'style_options' : {
+        'style_options' : ('rectangle', 'reccir'),
+        'style_options_parameters' : {
             'rectangle' :{
                 'lights_min' : 1,
                 'lights_max' : 3,
-                '1' : {('red')},
-                '2' : {('green', 'red')},
-                '3' : {('green', 'yellow', 'red')}
+                '1' : ('red', 'red', 'red'),
+                '2' : ('green', 'red', 'red'),
+                '3' : ('green', 'yellow', 'red')
             },
             'reccir' : {
                 'lights_min' : 1,
                 'lights_max' : 3,
-                '1' : {('red')},
-                '2' : {('green', 'red')},
-                '3' : {('green', 'yellow', 'red')}
+                '1' : ('red','red', 'red'),
+                '2' : ('green', 'red', 'red'),
+                '3' : ('green', 'yellow', 'red')
             }
         },
         # 'post_height' : 
@@ -178,6 +179,7 @@ def draw_background_rec(aspect, sign, object_number):
     mat = bpy.data.materials['PBR_Dielectric']
     obj.data.materials.append(mat)
 
+    aspect['background'] = {}
     aspect['background']['sign_height'] = height
     aspect['background']['sign_width'] = width
 
@@ -219,6 +221,7 @@ def draw_background_cir(aspect, sign, object_number):
     mat = bpy.data.materials['PBR_Dielectric']
     obj.data.materials.append(mat)
 
+    aspect['background'] = {}
     aspect['background']['sign_height'] = height
     aspect['background']['sign_width'] = height
 
@@ -256,6 +259,7 @@ def draw_background_cirtri(aspect, sign, object_number):
     mat = bpy.data.materials['PBR_Dielectric']
     obj.data.materials.append(mat)
 
+    aspect['background'] = {}
     aspect['background']['sign_height'] = height
     aspect['background']['sign_width'] = height
 
@@ -319,7 +323,7 @@ def draw_background_reccir(aspect, sign, object_number):
     mat = bpy.data.materials['PBR_Dielectric']
     obj1.data.materials.append(mat)
 
-
+    aspect['background'] = {}
     aspect['background']['sign_height'] = height + height_circle
     aspect['background']['sign_width']= width
 
@@ -399,6 +403,7 @@ def draw_background_recround(aspect, sign, object_number):
     mat = bpy.data.materials['PBR_Dielectric']
     obj.data.materials.append(mat)
 
+    aspect['background'] = {}
     aspect['background']['sign_height'] = height + bevel_radius
     aspect['background']['sign_width'] = width
 
@@ -435,6 +440,7 @@ def draw_background_squ(aspect, sign, object_number):
     mat = bpy.data.materials['PBR_Dielectric']
     obj.data.materials.append(mat)
 
+    aspect['background'] = {}
     aspect['background']['sign_height'] = width
     aspect['background']['sign_width'] = width
 
@@ -653,7 +659,7 @@ def draw_blank(object_number):
 
     return obj1
 
-def move_can(sign, post, aspect, obj, x_lights):
+def move_can(sign, post, aspect, light, obj, x_lights):
 
     style  = aspect['style']
     light_radius  = sign['parameters']['light_radius']
@@ -730,7 +736,11 @@ def move_can(sign, post, aspect, obj, x_lights):
         obj.location=(0, obj.location[1], center)
 
     if light_status == 'on':
-        add_signal_lamp(x_light, light_values, thickness, light_radius, light_spacing, obj.location)
+        colour = sign['style_options_parameters'][aspect['style']][str(aspect['number_lights'])]
+        colour = colour[light_number]
+        rgb = config_dir['colour'][colour]
+        light_values = (rgb[0], rgb[1], rgb[2])
+        add_signal_lamp(x_lights, light_values, light_wall_thickness, light_radius, light_spacing, obj.location)
 
     return obj
 
@@ -1169,9 +1179,11 @@ def camera_add(location_values, angle_values, camera):
         obj.data.lens = camera['lens']
         obj.data.sensor_width = camera['sensor_width'] 
 
-def lamp_add(object_number, 
-             object_name, 
+def lamp_add(object_number,
              sun_rotation):
+
+    objects = bpy.data.objects
+
     object_number = object_number + 1
     bpy.ops.object.lamp_add(type='SUN',
                             location=(0, 0, 0)
@@ -1189,9 +1201,11 @@ def lamp_add(object_number,
 def add_signal_lamp(x_light, light_values, background_thickness, light_radius, light_spacing, location):
 
     location_values = (location[0], background_thickness * 1.01 + location[1], location[2])
-    light_values = (0.426 * light_values[x_light][0], 
-                    0.426 * light_values[x_light][1], 
-                    0.426 * light_values[x_light][2], 1)
+    light_values = (0.426 * light_values[0], 
+                    0.426 * light_values[1], 
+                    0.426 * light_values[2], 1)
+
+    objects = bpy.data.objects
 
     bpy.ops.object.lamp_add(type='AREA',
                             location=location_values
@@ -1306,12 +1320,14 @@ def calculate_post_location(sign, post_number):
     # TODO figure out some eqn and how to flip it and move left and right
     # TODO figure out what changes when i menuvour a post
     # Include some half cut-off the screen (train going past it)
+    post['position'] = {}
     post['position']['x'] = 0 # This is the post and aspectss combined, not only the post TODO
     post['position']['y'] = 0 # This is the post and aspectss combined, not only the post TODO
     post['position']['z'] = 0 # This is the post and aspectss combined, not only the post TODO
     # TODO somewhere i need to acount for moving the sign up so the bottom of the post is at ground height (maybe?)
 
     # Vary angle along z axis by +- 5 degrees of zero position both for forwards and backwards
+    post['rotation'] = {}
     post['rotation']['x'] = 0
     post['rotation']['y'] = 0
     post['rotation']['z'] = random.randint(sign['parameters']['z_rotation_min'],
@@ -1319,7 +1335,7 @@ def calculate_post_location(sign, post_number):
 
 def calculate_aspect_location(sign, post, aspect_number):
 
-    post_height = sign['post_height']
+    post_height = sign['parameters']['post_height']
 
     if aspect_number == 0:
         aspect0 = post['aspect0']
@@ -1329,10 +1345,12 @@ def calculate_aspect_location(sign, post, aspect_number):
 
         vertical_difference = post_height - sign_height - light_radius - border_size
 
+        aspect0['position'] = {}
         aspect0['position']['x'] = 0
         aspect0['position']['y'] = 0
         aspect0['position']['z'] = vertical_difference
 
+        aspect0['rotation'] = {}
         aspect0['rotation']['x'] = 0
         aspect0['rotation']['y'] = 0
         aspect0['rotation']['z'] = 0
@@ -1356,10 +1374,12 @@ def calculate_aspect_location(sign, post, aspect_number):
         vertical_difference = rand_aspect_height - sign_height - light_radius - border_size
 
         # update location values of aspect
+        aspect1['position'] = {}
         aspect1['position']['x'] = 0
         aspect1['position']['y'] = 0
         aspect1['position']['z'] = vertical_difference
 
+        aspect1['rotation'] = {}
         aspect1['rotation']['x'] = 0
         aspect1['rotation']['y'] = 0
         aspect1['rotation']['z'] = 0
@@ -1499,13 +1519,16 @@ for filename in os.listdir(Input_img_file):
     sign['parameters']['post_height'] = (post_height_max - post_height_min * np.random.random() + post_height_min) # Calculate outside of loop, so all are the same in  a frame
 
     pass_count = 0 # used for pass index allowing each aspect to be an individual colour
+    light_list = {}
+    aspect_list = {}
 
     for post_number in range(0, sign['number_posts']):
         post_obj = draw_post(object_number, sign)
         post_obj.name = 'post' + str(post_number)
 
 
-        sign['post' + str(post_number)] = 
+        sign['post' + str(post_number)] = {}
+        post = sign['post' + str(post_number)]
 
         post['number_aspects'] = random.randint(sign['aspects_min'], sign['aspects_max'])
         
@@ -1531,28 +1554,36 @@ for filename in os.listdir(Input_img_file):
             c += 1
         if rl_position == 'far_right':
             d += 1
+        sign['post' + str(post_number)]['position'] = {}
         sign['post' + str(post_number)]['position']['rl'] = rl_position
 
 
 
 
         for aspect_number in range(0, post['number_aspects']):
+            post['aspect' + str(aspect_number)] = {}
             aspect = post['aspect' + str(aspect_number)]
 
             # Random style
             aspect['style'] = random.choice(sign['style_options'])
-            aspect['number_lights'] = random.randint(sign['style_options'][aspect['style']]['light_min'], 
-                                                     sign['style_options'][aspect['style']]['light_max'])
+            aspect['number_lights'] = random.randint(sign['style_options_parameters'][aspect['style']]['lights_min'], 
+                                                     sign['style_options_parameters'][aspect['style']]['lights_max'])
 
-            background_obj = draw_background[aspect['style']](aspect, sign)
+            background_obj = draw_background[aspect['style']](aspect, sign, object_number)
 
-            light_on = random.randint(sign['style_options'][aspect['style']]['light_min'], 
+            light_on = random.randint(sign['style_options_parameters'][aspect['style']]['lights_min'], 
                                       aspect['number_lights'])
-            aspect[light + str(light_on)]['status'] = 'on'
 
             pass_count = pass_count + 1
 
             for light_number in range(0, aspect['number_lights']):
+
+                aspect['light' + str(light_number)] = {}
+
+                if light_number == light_on:
+                    aspect['light' + str(light_number)]['status'] = 'on'
+                else:
+                    aspect['light' + str(light_number)]['status'] = 'off'
 
                 light = aspect['light' + str(light_number)]
 
@@ -1564,7 +1595,7 @@ for filename in os.listdir(Input_img_file):
                     blank_obj.data.materials.append(mat)
 
                     blank_obj = move_can(sign, post, aspect, light, blank_obj, light_number)
-                    light_objects[light_number] = blank_obj.name
+                    light_list[blank_obj.name] = blank_obj.name # No idea what this does
                     light['blank' + str(light_number)] = str(blank_obj.name)
 
                 else:
@@ -1582,7 +1613,8 @@ for filename in os.listdir(Input_img_file):
                     light_obj.name = 'light' + str(light_number)
 
                     light_obj = move_can(sign, post, aspect, light, light_obj, light_number)
-                    colour = sign['style_options'][aspect['style']][aspect['number_lights']][light_number]
+                    colour = sign['style_options_parameters'][aspect['style']][str(aspect['number_lights'])]
+                    colour = colour[light_number]
                     rgb = config_dir['colour'][colour]
                     R = rgb[0]
                     G = rgb[1]
@@ -1592,7 +1624,7 @@ for filename in os.listdir(Input_img_file):
                         mat_name = 'light_glass_material_' + str(R) + '_' + str(G) + '_' + str(B)
 
                         mat = bpy.data.materials[mat_name]                   
-                        add_signal_lamp(light_number, light_obj.location)
+                        #add_signal_lamp(light_number, light_obj.location)
 
                     else:
                         mat_name = 'light_glass_material_' + str(R) + '_' + str(G) + '_' + str(B)
@@ -1604,19 +1636,19 @@ for filename in os.listdir(Input_img_file):
                     # group light_obj as child under can_obj return can_obj
                     bpy.data.objects[can_obj.name].select = True
                     bpy.data.objects[light_obj.name].select = True
-                    bpy.ops.object.join()
+                    #bpy.ops.object.join()
 
-                    light_objects[light_number] = can_obj.name
+                    light_list[can_obj.name] = can_obj.name # No idea what this does
                     light['light' + str(light_number)] = str(can_obj.name)
 
             # For each aspect join parts
             # All lights have been created for this aspect, time to join it to the background
             # for lights in light_objects: select all lights
             # select background_obj
-            for lights in light:
+            for lights in light_list:
                 bpy.data.objects[lights].select = True
             bpy.data.objects[background_obj.name].select = True
-            bpy.ops.object.join()
+            #bpy.ops.object.join()
 
             # group currently selected
             # Apply index to current aspect pass_index = aspect_Number
@@ -1631,13 +1663,15 @@ for filename in os.listdir(Input_img_file):
             bpy.context.object.name = "Aspect" + str(aspect_number)
             aspect_obj = bpy.data.objects.get('Aspect' + str(aspect_number))
 
-            obj.pass_index = pass_count
+            aspect_obj.pass_index = pass_count
 
-            aspect_obj.location = calculate_aspect_location(sign, post, aspect_number)
+            calculate_aspect_location(sign, post, aspect_number)
+
+            aspect_list[aspect_obj.name] = aspect_obj.name
 
         # for aspects in aspect_objects: select all aspects
         # select post_obj
-        for aspects in aspect:
+        for aspects in aspect_list:
                 bpy.data.objects[aspects].select = True
         bpy.data.objects[post_obj.name].select = True
         
@@ -1651,9 +1685,9 @@ for filename in os.listdir(Input_img_file):
         # move current post to randomly generated position and rotation
         # maybe define how positing goes with some function
         # TODO
-        post_obj.location = calculate_post_location(sign, post_number)
+        calculate_post_location(sign, post_number)
 
-
+    g
 
     #####################################################################################################################
     #####################################################################################################################
@@ -1683,7 +1717,9 @@ for filename in os.listdir(Input_img_file):
                                 (frame_data['frame_heading'] * (math.pi / 180))
                                 )
 
-    lamp_add(sun_rotation)
+    lamp_add(object_number, sun_rotation)
+
+    background_img = load_img(frame_number)
 
     compositor_set(frame_number,
                    background_img)
@@ -1696,7 +1732,7 @@ for filename in os.listdir(Input_img_file):
 
     # Render the image
     bpy.context.scene.frame_set(fno)
-    bpy.ops.render.render(write_still=True)
+    #bpy.ops.render.render(write_still=True)
 
     config_dir['frame_data'] = frame_data
 
