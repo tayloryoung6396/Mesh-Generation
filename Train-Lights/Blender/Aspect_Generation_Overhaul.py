@@ -46,7 +46,11 @@ config_dir = {
             'z_rotation_max' : 10,
             'min_aspect_height' : 1.0,
             'post_height_min' : 1.5,
-            'post_height_max' :2.5
+            'post_height_max' :2.5,
+            'far_left' : -2,
+            'left' : -0.5,
+            'right' : 0.5,
+            'far_right' : -2
         },
         'style_options' : ('rectangle', 'reccir'),
         'style_options_parameters' : {
@@ -67,8 +71,8 @@ config_dir = {
         },
         # 'post_height' : 
         'posts_min' : 1,
-        'posts_max' : 4,
-        'aspects_min' : 1,
+        'posts_max' : 1,
+        'aspects_min' : 2,
         'aspects_max' : 2,
         # 'number_posts' :
         # 'post1' : {                             # These lines not needed, only for visual aid
@@ -304,11 +308,18 @@ def draw_background_reccir(aspect, sign, object_number):
     obj2.location=(0, -background_thickness, vertical_origin_circle)
 
     # Combine square and circle
-    mod_bool = obj1.modifiers.new('my_bool_mod_2', 'BOOLEAN')
-    mod_bool.operation = 'UNION'
-    mod_bool.object = obj2
-    bpy.context.scene.objects.active = obj1
-    res = bpy.ops.object.modifier_apply(modifier = 'my_bool_mod_2')
+    # mod_bool = obj1.modifiers.new('my_bool_mod_2', 'BOOLEAN')
+    # mod_bool.operation = 'UNION'
+    # mod_bool.object = obj2
+    # bpy.context.scene.objects.active = obj1
+    # res = bpy.ops.object.modifier_apply(modifier = 'my_bool_mod_2')
+
+    bpy.ops.object.select_all(action='DESELECT')
+    obj1.select = True
+    obj2.select = True
+    bpy.ops.object.join()
+    bpy.context.object.name = ('background_obj')
+    obj1 = bpy.data.objects.get('background_obj')
 
     # TODO should be deleting this object and combining properly
     # obj2.select = True
@@ -316,8 +327,8 @@ def draw_background_reccir(aspect, sign, object_number):
     # object_name.remove(object_name[object_number])
     # object_number = object_number - 1  
 
-    mat = bpy.data.materials['PBR_Dielectric']
-    obj2.data.materials.append(mat)
+    # mat = bpy.data.materials['PBR_Dielectric']
+    # obj2.data.materials.append(mat)
 
     # Add material to sign   
     mat = bpy.data.materials['PBR_Dielectric']
@@ -757,11 +768,11 @@ def draw_post(object_number, sign):
 
     obj1.scale=(post_radius, 
                 post_radius,
-                post_height)
+                post_height/2)
 
     obj1.location=(0, 
                    -0.075,
-                   (post_height / 2)# TODO check this equation # origin bottom face of post, center
+                   (post_height/2)# TODO check this equation # origin bottom face of post, center
                    )
 
     return(obj1)
@@ -1317,9 +1328,12 @@ def calculate_post_location(sign, post_number):
     # TODO figure out some eqn and how to flip it and move left and right
     # TODO figure out what changes when i menuvour a post
     # Include some half cut-off the screen (train going past it)
+    min_x = sign['parameters'][rl_position]
+    max_x = min_x * 1.5
+
     post['position'] = {}
-    post['position']['x'] = 0 # This is the post and aspectss combined, not only the post TODO
-    post['position']['y'] = 0 # This is the post and aspectss combined, not only the post TODO
+    post['position']['x'] = (max_x - min_x * np.random.random() + min_x) # This is the post and aspectss combined, not only the post TODO
+    post['position']['y'] = -(10 - 1 * np.random.random() + 1) # This is the post and aspectss combined, not only the post TODO
     post['position']['z'] = 0 # This is the post and aspectss combined, not only the post TODO
     # TODO somewhere i need to acount for moving the sign up so the bottom of the post is at ground height (maybe?)
 
@@ -1346,7 +1360,7 @@ def calculate_aspect_location(sign, post, aspect_number):
         light_radius = sign['parameters']['light_radius']
         border_size = sign['parameters']['border_size']
 
-        vertical_difference = post_height - sign_height - light_radius - border_size
+        vertical_difference = post_height - light_radius - border_size
 
         aspect0['position'] = {}
         aspect0['position']['x'] = 0
@@ -1374,18 +1388,21 @@ def calculate_aspect_location(sign, post, aspect_number):
         # + the amount below the bottom light of the top aspect
         # + some minimum offset, minimum sign position)
 
-        amount_overlap = sign_height + light_radius + border_size + 0.1 # some small gap minimum
-        min_aspect_height = sign['parameters']['min_aspect_height']
-        # do some random position between amount_overlap and minimum_height
-        rand_aspect_height = (amount_overlap - min_aspect_height * np.random.random() + min_aspect_height)
+        amount_overlap = sign_height + light_radius + border_size # some small gap minimum
+        min_aspect_height = sign['parameters']['min_aspect_height'] + amount_overlap
 
-        vertical_difference = rand_aspect_height - sign_height - light_radius - border_size
+        aspect0 = post['aspect0']
+        sign_height0 = aspect0['background']['sign_height']
+        top_limit = post_height - sign_height0 - light_radius - border_size - 0.1         
+
+        # do some random position between amount_overlap and minimum_height
+        rand_aspect_height = (top_limit - min_aspect_height * np.random.random() + min_aspect_height)
 
         # update location values of aspect
         aspect1['position'] = {}
         aspect1['position']['x'] = 0
         aspect1['position']['y'] = 0
-        aspect1['position']['z'] = vertical_difference
+        aspect1['position']['z'] = rand_aspect_height
 
         aspect1['rotation'] = {}
         aspect1['rotation']['x'] = 0
@@ -1528,11 +1545,11 @@ for filename in os.listdir(Input_img_file):
 
         # Create post group for each post
         ###################################################################################################################################
-        bpy.data.groups.new('Post' + str(post_number))
+        bpy.data.groups.new('Post_group' + str(post_number))
         bpy.ops.object.parent_set(type='OBJECT', keep_transform=True)
 
         bpy.context.object.name = "Post" + str(post_number)
-        post_group = bpy.data.objects.get('Post' + str(post_number))
+        post_group = bpy.data.groups.get('Post_group' + str(post_number))
         ###################################################################################################################################
 
 
@@ -1550,12 +1567,16 @@ for filename in os.listdir(Input_img_file):
         #rl_position = random.choice(rl_choice, rl_weight)
         rl_position = np.random.choice(rl_choice, 1, p=rl_weight)
         if rl_position == 'far_left':
+            rl_position = 'far_left'
             a += 1
         if rl_position == 'left':
+            rl_position = 'left'
             b += 1
         if rl_position == 'right':
+            rl_position = 'right'
             c += 1
         if rl_position == 'far_right':
+            rl_position = 'far_right'
             d += 1
         sign['post' + str(post_number)]['position'] = {}
         sign['post' + str(post_number)]['position']['rl'] = rl_position
@@ -1576,11 +1597,11 @@ for filename in os.listdir(Input_img_file):
 
             # Create aspect group for each aspect on post
             ###################################################################################################################################
-            bpy.data.groups.new('Aspect' + str(aspect_number))
-            bpy.ops.object.parent_set(type='OBJECT', keep_transform=True)
+            # bpy.data.groups.new('Aspect_group' + str(aspect_number))
+            # bpy.ops.object.parent_set(type='OBJECT', keep_transform=True)
 
-            bpy.context.object.name = "Aspect" + str(aspect_number)
-            aspect_group = bpy.data.objects.get('Aspect' + str(aspect_number))
+            # bpy.context.object.name = ('Aspect' + str(aspect_number))
+            # aspect_group = bpy.data.groups.get('Aspect_group' + str(aspect_number))
             ################################################################################################################################### 
 
 
@@ -1604,7 +1625,7 @@ for filename in os.listdir(Input_img_file):
 
                     # If the light is blank, draw the object, add material, move to position, add to aspect group
                     blank_obj = draw_blank(object_number)
-                    blank_obj.name = 'blank' + str(light_number)
+                    blank_obj.name = 'blank' + str(post_number) + str(aspect_number) + str(light_number)
                     
                     mat = bpy.data.materials['PBR_Dielectric']
                     blank_obj.data.materials.append(mat)
@@ -1612,22 +1633,43 @@ for filename in os.listdir(Input_img_file):
                     blank_obj = move_can(sign, post, aspect, light, blank_obj, light_number)
                     light['blank' + str(light_number)] = str(blank_obj.name)
 
-                    aspect_group.objects.link(blank_obj)
+                    bpy.ops.object.select_all(action='DESELECT')
+                    if light_number == 0:
+                        background_obj.select = True
+                    else:
+                        aspect_group = bpy.data.objects.get('Aspect_group' + str(aspect_number))
+                        aspect_group.select = True
+                    blank_obj.select = True
+                    bpy.ops.object.join()
+                    bpy.context.object.name = ('Aspect_group' + str(aspect_number))
+                    aspect_group = bpy.data.objects.get('Aspect_group' + str(aspect_number))
 
                 else:
                     # If the light is on or off, draw the object, add material, move to position, add to aspect group
                     can_obj = draw_can(object_number)
-                    can_obj.name = 'can' + str(light_number)
+                    can_obj.name = 'can' + str(post_number) + str(aspect_number) + str(light_number)
                     
                     mat = bpy.data.materials['PBR_Dielectric']
                     can_obj.data.materials.append(mat)
 
                     can_obj = move_can(sign, post, aspect, light, can_obj, light_number)
 
-                    aspect_group.objects.link(can_obj)
+
+                    bpy.ops.object.select_all(action='DESELECT')
+                    if light_number == 0:
+                        background_obj.select = True
+                    else:
+                        aspect_group = bpy.data.objects.get('Aspect_group' + str(aspect_number))
+                        aspect_group.select = True
+                    can_obj.select = True
+                    bpy.ops.object.join()
+                    bpy.context.object.name = ('Aspect_group' + str(aspect_number))
+                    aspect_group = bpy.data.objects.get('Aspect_group' + str(aspect_number))
+
+
 
                     light_obj = draw_light(object_number)
-                    light_obj.name = 'light' + str(light_number)
+                    light_obj.name = 'light' + str(post_number) + str(aspect_number) + str(light_number)
                     light_obj = move_can(sign, post, aspect, light, light_obj, light_number)
 
                     colour = sign['style_options_parameters'][aspect['style']][str(aspect['number_lights'])]
@@ -1650,32 +1692,54 @@ for filename in os.listdir(Input_img_file):
                     light_wall_thickness  = sign['parameters']['light_wall_thickness']
                     light_status  = light['status']
 
-                    if light_status == 'on':
+                    if light_status == 'o':
                         lamp_obj = add_signal_lamp(light_number, light_values, light_wall_thickness, light_radius, light_spacing, light_obj.location)
-                        aspect_group.objects.link(lamp_obj)
 
-                    aspect_group.objects.link(light_obj)
+
+
+                    #print('here 1a' + str(post_number) + str(aspect_number))
+                    bpy.ops.object.select_all(action='DESELECT')
+                    aspect_group.select = True
+                    light_obj.select = True
+                    bpy.ops.object.join()
+                    bpy.context.object.name = ('Aspect_group' + str(aspect_number))
+                    aspect_group = bpy.data.objects.get('Aspect_group' + str(aspect_number))
+                    #print('here 1b' + str(post_number) + str(aspect_number))
+
 
             #Index aspect group, move position
-            aspect_group.pass_index = pass_count
+            #aspect_group.pass_index = pass_count
 
             position, rotation = calculate_aspect_location(sign, post, aspect_number)
-            aspect_group = bpy.data.objects.get('Aspect' + str(aspect_number))
-            aspect_group.location = position
-            aspect_group.rotation_euler.x = rotation[0]
-            aspect_group.rotation_euler.y = rotation[1]
-            aspect_group.rotation_euler.z = rotation[2]
 
-            post_group.objects.link(aspect_group)
+            # bpy.ops.object.select_all(action='DESELECT')
+
+            aspect_group.location = position #+ aspect_group.location
+            #aspect_group.rotation_euler.x = rotation[0] + aspect_group.rotation_euler[0]
+            #aspect_group.rotation_euler.y = rotation[1] + aspect_group.rotation_euler[1]
+            #aspect_group.rotation_euler.z = rotation[2] + aspect_group.rotation_euler[2]
+
+            
+            #print('here 2a' + str(post_number) + str(aspect_number))
+            bpy.ops.object.select_all(action='DESELECT')
+            if aspect_number == 0:
+                post_obj.select = True
+            else:
+                post_group = bpy.data.objects.get('Post_group' + str(post_number))
+                post_group.select = True
+            aspect_group.select = True
+            bpy.ops.object.join()
+            bpy.context.object.name = ('Post_group' + str(post_number))
+            post_group = bpy.data.objects.get('Post_group' + str(post_number))
+            #print('here 2b' + str(post_number) + str(aspect_number))
 
         # Combine aspect to post here
         position, rotation = calculate_post_location(sign, post_number)
 
-        post_group = bpy.data.objects.get('Post' + str(post_number))
         post_group.location = position
-        post_group.rotation_euler.x = rotation[0]
-        post_group.rotation_euler.y = rotation[1]
-        post_group.rotation_euler.z = rotation[2]
+        #post_group.rotation_euler.x = rotation[0] + post_group.rotation_euler[0]
+        #post_group.rotation_euler.y = rotation[1] + post_group.rotation_euler[1]
+        #post_group.rotation_euler.z = rotation[2] + post_group.rotation_euler[2]
 
     #####################################################################################################################
     #####################################################################################################################
@@ -1684,9 +1748,9 @@ for filename in os.listdir(Input_img_file):
     #####################################################################################################################
 
     # Shadow catcher plane
-    bpy.ops.mesh.primitive_plane_add(location=(0, 0, 0))
-    bpy.context.object.scale=(5, 5, 1)
-    bpy.context.object.cycles.is_shadow_catcher = True
+    # bpy.ops.mesh.primitive_plane_add(location=(position))
+    # bpy.context.object.scale=(5, 5, 1)
+    # bpy.context.object.cycles.is_shadow_catcher = True
 
     location_values = (0.0, 0.0, 0.0)
     angle_values = (1.57, 0, 3.14)
@@ -1720,7 +1784,7 @@ for filename in os.listdir(Input_img_file):
 
     # Render the image
     bpy.context.scene.frame_set(fno)
-    bpy.ops.render.render(write_still=True)
+    #bpy.ops.render.render(write_still=True)
 
     config_dir['frame_data'] = frame_data
 
