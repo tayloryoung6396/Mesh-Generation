@@ -1591,6 +1591,9 @@ for filename in os.listdir(Input_img_file):
             aspect['number_lights'] = random.randint(sign['style_options_parameters'][aspect['style']]['lights_min'], 
                                                      sign['style_options_parameters'][aspect['style']]['lights_max'])
 
+            if aspect_number != 0:
+                aspect['number_lights'] = 1
+
             bpy.ops.object.select_all(action='DESELECT')
 
             background_obj = draw_background[aspect['style']](aspect, sign, object_number)
@@ -1609,6 +1612,7 @@ for filename in os.listdir(Input_img_file):
                                       aspect['number_lights'])
 
             pass_count = pass_count + 1
+
 
             for light_number in range(0, aspect['number_lights']):
 
@@ -1740,6 +1744,7 @@ for filename in os.listdir(Input_img_file):
         #post_group.rotation_euler.x = rotation[0] + post_group.rotation_euler[0]
         #post_group.rotation_euler.y = rotation[1] + post_group.rotation_euler[1]
         #post_group.rotation_euler.z = rotation[2] + post_group.rotation_euler[2]
+        # TODO don't even try this until the rest works
 
     #####################################################################################################################
     #####################################################################################################################
@@ -1796,3 +1801,19 @@ for filename in os.listdir(Input_img_file):
     fno += 1
 
 print('Finished Rendering :)')
+
+
+# TODO Position of origin needs to be bettwe configured, possibly adding a ground plane variable that sets the vertical offset 
+# Ground plane height can also be thought of as height of camera above ground
+
+
+# Sign height defined 
+# Move to ground plane height
+# Aspect height - this should be measured from the ground plane(bottom of  the post) to the bottom of the sign
+# When aspect is created, move height to bottom of sign at origin,
+# then place on post = vertical position + obj.location
+#
+
+# Shadow catcher plan should be placed at the ground plane height
+# 
+# TODO add track x orientation offset, will be negative on one side
