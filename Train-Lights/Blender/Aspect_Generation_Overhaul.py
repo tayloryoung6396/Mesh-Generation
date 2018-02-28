@@ -1817,3 +1817,13 @@ print('Finished Rendering :)')
 # Shadow catcher plan should be placed at the ground plane height
 # 
 # TODO add track x orientation offset, will be negative on one side
+#
+# TODO fix strengt of sun
+# TODO fix colour of post and sign
+# TODO fix pass indexing
+# TODO join aspect pieces, add pass index,
+# group to parent, aspects and signals
+# move
+# ungroup
+#
+# 
