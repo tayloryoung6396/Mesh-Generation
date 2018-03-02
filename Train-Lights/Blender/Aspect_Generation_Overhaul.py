@@ -335,7 +335,7 @@ def draw_background_reccir(aspect, sign, object_number):
     obj1.data.materials.append(mat)
 
     aspect['background'] = {}
-    aspect['background']['sign_height'] = height + height_circle
+    aspect['background']['sign_height'] = (no_lights * light_radius * 2) + ((no_lights - 1) * light_spacing) + border_size + border_size#height + height_circle
     aspect['background']['sign_width']= width
 
     return obj1
@@ -1333,8 +1333,8 @@ def calculate_post_location(sign, post_number):
 
     post['position'] = {}
     post['position']['x'] = (max_x - min_x * np.random.random() + min_x) # This is the post and aspectss combined, not only the post TODO
-    post['position']['y'] = -(10 - 1 * np.random.random() + 1) # This is the post and aspectss combined, not only the post TODO
-    post['position']['z'] = 0 # This is the post and aspectss combined, not only the post TODO
+    post['position']['y'] = -((80 - (-5)) * np.random.random() +(-5)) # This is the post and aspectss combined, not only the post TODO
+    post['position']['z'] = 2 # This is the post and aspectss combined, not only the post TODO
     # TODO somewhere i need to acount for moving the sign up so the bottom of the post is at ground height (maybe?)
 
     # Vary angle along z axis by +- 5 degrees of zero position both for forwards and backwards
@@ -1388,21 +1388,23 @@ def calculate_aspect_location(sign, post, aspect_number):
         # + the amount below the bottom light of the top aspect
         # + some minimum offset, minimum sign position)
 
-        amount_overlap = sign_height + light_radius + border_size # some small gap minimum
+        amount_overlap = light_radius + border_size # some small gap minimum
         min_aspect_height = sign['parameters']['min_aspect_height'] + amount_overlap
 
         aspect0 = post['aspect0']
         sign_height0 = aspect0['background']['sign_height']
-        top_limit = post_height - sign_height0 - light_radius - border_size - 0.1         
+        top_limit = post_height - sign_height0 - light_radius - border_size - 0.1       
 
         # do some random position between amount_overlap and minimum_height
-        rand_aspect_height = (top_limit - min_aspect_height * np.random.random() + min_aspect_height)
+        rand_aspect_height = ((top_limit - min_aspect_height) * np.random.random() + min_aspect_height)
 
         # update location values of aspect
         aspect1['position'] = {}
         aspect1['position']['x'] = 0
         aspect1['position']['y'] = 0
         aspect1['position']['z'] = rand_aspect_height
+        
+        print('top_limit: {}, bottom_limit: {}, rand: {}'.format(top_limit, min_aspect_height, rand_aspect_height))        
 
         aspect1['rotation'] = {}
         aspect1['rotation']['x'] = 0
@@ -1416,6 +1418,37 @@ def calculate_aspect_location(sign, post, aspect_number):
 
     else:
         print('Too many aspects')
+
+
+#####################################################################################################################
+#####################################################################################################################
+#                                                   DEBUGGING                                                       #
+#####################################################################################################################
+#####################################################################################################################
+
+def print_text(sign, object_number):
+
+    font_size = 0.3
+
+    for posts in range(0, sign['number_posts']):
+        
+        post_name = sign['Post_group' + str(posts)]
+        post = bpy.data.objects.get('Post_group' + str(posts))
+
+        objects = bpy.data.objects
+
+        object_number = object_number + 1
+        bpy.ops.object.text_add(location=(post.location[0], 0, post.location[2]))
+
+        object_name.append(bpy.context.active_object.name)
+        obj = objects[object_name[-1]]
+
+        obj.data.body = post_name
+
+        obj.scale=(font_size, font_size, font_size)
+        obj.rotation_euler.x = 1.57
+        obj.rotation_euler.z = 3.14
+
 
 #####################################################################################################################
 #####################################################################################################################
@@ -1777,6 +1810,8 @@ for filename in os.listdir(Input_img_file):
     lamp_add(object_number, sun_rotation)
 
     background_img = load_img(frame_number)
+
+    print_text(sign, object_number)    
 
     compositor_set(frame_number,
                    background_img)
