@@ -6,7 +6,7 @@ import os
 import random
 import yaml
 
-Input_meta_file  = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Input-JSON/VIRB0045-8.json'
+Input_meta_file  = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Input-Json/VIRB0045-8.json'
 Output_meta_file = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Output-meta/'
 Input_img_file   = '/home/nubots/Code/Mesh-Generation/Train-Lights/Blender/Input/'
 
@@ -72,7 +72,7 @@ config_dir = {
         # 'post_height' : 
         'posts_min' : 1,
         'posts_max' : 1,
-        'aspects_min' : 2,
+        'aspects_min' : 1,
         'aspects_max' : 2,
         # 'number_posts' :
         # 'post1' : {                             # These lines not needed, only for visual aid
@@ -116,10 +116,10 @@ config_dir = {
         'green' : (0, 1, 0)
     },
     'camera_parameters' : {
-            'type' : 'PERSP', # PANO, PERSP
-            'FOV' : 2.37365,
+            'type' : 'PANO', # PANO, PERSP
+            'FOV' : 2.46091,
             'lens' : 35, # mm
-            'sensor_width' : 32 # mm
+            'sensor_width' : (1/2.3)*25.4 # mm
     }
 }
 
@@ -1438,12 +1438,13 @@ def print_text(sign, object_number):
         objects = bpy.data.objects
 
         object_number = object_number + 1
-        bpy.ops.object.text_add(location=(post.location[0], 0, post.location[2]))
+        # bpy.ops.object.text_add(location=(post.location[0], 0, post.location[2]))
+        bpy.ops.object.text_add(location=(4, -10, 2))
 
         object_name.append(bpy.context.active_object.name)
         obj = objects[object_name[-1]]
 
-        obj.data.body = post_name['position']['y']
+        obj.data.body = str(post_name['position']['y'])
 
         obj.scale=(font_size, font_size, font_size)
         obj.rotation_euler.x = 1.57
@@ -1540,9 +1541,11 @@ for filename in os.listdir(Input_img_file):
     delete_objects()
 
     # Find current frame number
+
     frame_number = filename.lstrip('frame')
     frame_number = frame_number.rstrip('.jpg')
     frame_number = int(frame_number)
+    frame_number = 3150
 
     # Read in meta data of frame number
     with open(os.path.join(Input_meta_file)) as json_data:
@@ -1825,7 +1828,7 @@ for filename in os.listdir(Input_img_file):
 
     # Render the image
     bpy.context.scene.frame_set(fno)
-    #bpy.ops.render.render(write_still=True)
+    bpy.ops.render.render(write_still=True)
 
     config_dir['frame_data'] = frame_data
 
