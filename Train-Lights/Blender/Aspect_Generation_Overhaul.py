@@ -45,7 +45,7 @@ config_dir = {
             'z_rotation_min' : -10,
             'z_rotation_max' : 10,
             'min_aspect_height' : 1.0,
-            'post_height_min' : 1.5,
+            'post_height_min' : 2.5,
             'post_height_max' :2.5,
             'far_left' : -2,
             'left' : -0.5,
@@ -116,9 +116,9 @@ config_dir = {
         'green' : (0, 1, 0)
     },
     'camera_parameters' : {
-            'type' : 'PANO', # PANO, PERSP
+            'type' : 'PERSP', # PANO, PERSP
             'FOV' : 2.46091,
-            'lens' : 35, # mm
+            'lens' : 14.66, # mm
             'sensor_width' : (1/2.3)*25.4 # mm
     }
 }
@@ -139,8 +139,10 @@ def delete_objects():
 
 # Remove previous compositor
 def delete_compositor():
-    for items in bpy.data.materials:
-        bpy.data.materials.remove(items)
+    bpy.context.area.type = 'NODE_EDITOR'
+    bpy.ops.node.delete()
+    bpy.context.area.type = 'VIEW_3D'
+
 
 #####################################################################################################################
 #####################################################################################################################
@@ -1332,7 +1334,7 @@ def calculate_post_location(sign, post_number):
     max_x = min_x * 1.5
 
     post['position'] = {}
-    post['position']['x'] = (max_x - min_x * np.random.random() + min_x) # This is the post and aspectss combined, not only the post TODO
+    post['position']['x'] = 0 # (max_x - min_x * np.random.random() + min_x) # This is the post and aspectss combined, not only the post TODO
     post['position']['y'] = -((80 - (-5)) * np.random.random() +(-5)) # This is the post and aspectss combined, not only the post TODO
     post['position']['z'] = 2 # This is the post and aspectss combined, not only the post TODO
     # TODO somewhere i need to acount for moving the sign up so the bottom of the post is at ground height (maybe?)
@@ -1439,12 +1441,118 @@ def print_text(sign, object_number):
 
         object_number = object_number + 1
         # bpy.ops.object.text_add(location=(post.location[0], 0, post.location[2]))
-        bpy.ops.object.text_add(location=(4, -10, 2))
+        bpy.ops.object.text_add(location=(3, -10, 0.6))
+
+        object_name.append(bpy.context.active_object.name)
+        obj = objects[object_name[-1]]
+
+        obj.data.body = str(post_name['position']['x'])
+
+        obj.scale=(font_size, font_size, font_size)
+        obj.rotation_euler.x = 1.57
+        obj.rotation_euler.z = 3.14
+
+    for posts in range(0, sign['number_posts']):
+        
+        post_name = sign['post' + str(posts)]
+        post = bpy.data.objects.get('Post_group' + str(posts))
+
+        objects = bpy.data.objects
+
+        object_number = object_number + 1
+        # bpy.ops.object.text_add(location=(post.location[0], 0, post.location[2]))
+        bpy.ops.object.text_add(location=(3, -10, 0.4))
 
         object_name.append(bpy.context.active_object.name)
         obj = objects[object_name[-1]]
 
         obj.data.body = str(post_name['position']['y'])
+
+        obj.scale=(font_size, font_size, font_size)
+        obj.rotation_euler.x = 1.57
+        obj.rotation_euler.z = 3.14
+
+    for posts in range(0, sign['number_posts']):
+        
+        post_name = sign['post' + str(posts)]
+        post = bpy.data.objects.get('Post_group' + str(posts))
+
+        objects = bpy.data.objects
+
+        object_number = object_number + 1
+        # bpy.ops.object.text_add(location=(post.location[0], 0, post.location[2]))
+        bpy.ops.object.text_add(location=(3, -10, 0.2))
+
+        object_name.append(bpy.context.active_object.name)
+        obj = objects[object_name[-1]]
+
+        obj.data.body = str(post_name['position']['z'])
+
+        obj.scale=(font_size, font_size, font_size)
+        obj.rotation_euler.x = 1.57
+        obj.rotation_euler.z = 3.14
+
+
+
+
+
+
+
+    for posts in range(0, sign['number_posts']):
+        
+        post_name = sign['post' + str(posts)]
+        post = bpy.data.objects.get('Post_group' + str(posts))
+
+        objects = bpy.data.objects
+
+        object_number = object_number + 1
+        # bpy.ops.object.text_add(location=(post.location[0], 0, post.location[2]))
+        bpy.ops.object.text_add(location=(3, -10, -0.2))
+
+        object_name.append(bpy.context.active_object.name)
+        obj = objects[object_name[-1]]
+
+        obj.data.body = str(post.dimensions[0])
+
+        obj.scale=(font_size, font_size, font_size)
+        obj.rotation_euler.x = 1.57
+        obj.rotation_euler.z = 3.14
+
+    for posts in range(0, sign['number_posts']):
+        
+        post_name = sign['post' + str(posts)]
+        post = bpy.data.objects.get('Post_group' + str(posts))
+
+        objects = bpy.data.objects
+
+        object_number = object_number + 1
+        # bpy.ops.object.text_add(location=(post.location[0], 0, post.location[2]))
+        bpy.ops.object.text_add(location=(3, -10, -0.4))
+
+        object_name.append(bpy.context.active_object.name)
+        obj = objects[object_name[-1]]
+
+        obj.data.body = str(post.dimensions[1])
+
+        obj.scale=(font_size, font_size, font_size)
+        obj.rotation_euler.x = 1.57
+        obj.rotation_euler.z = 3.14
+
+    for posts in range(0, sign['number_posts']):
+        
+        post_name = sign['post' + str(posts)]
+        post = bpy.data.objects.get('Post_group' + str(posts))
+
+        objects = bpy.data.objects
+
+        object_number = object_number + 1
+        # bpy.ops.object.text_add(location=(post.location[0], 0, post.location[2]))
+        bpy.ops.object.text_add(location=(3, -10, -0.6))
+
+        object_name.append(bpy.context.active_object.name)
+        obj = objects[object_name[-1]]
+
+        obj.data.body = str(post.dimensions[2])
 
         obj.scale=(font_size, font_size, font_size)
         obj.rotation_euler.x = 1.57
@@ -1459,7 +1567,7 @@ def print_text(sign, object_number):
 
 delete_materials()
 
-#delete_compositor()
+delete_compositor()
 
 #delete_objects()
 
