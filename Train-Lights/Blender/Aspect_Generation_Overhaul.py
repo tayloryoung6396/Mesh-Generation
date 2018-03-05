@@ -1854,6 +1854,7 @@ for filename in os.listdir(Input_img_file):
                     bpy.context.object.name = ('Aspect_group' + str(aspect_number))
                     aspect_group = bpy.data.objects.get('Aspect_group' + str(aspect_number))
                     #print('here 1b' + str(post_number) + str(aspect_number))
+                    hello
 
 
             #Index aspect group, move position
